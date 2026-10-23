@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.idea/
+.vscode/
+
+# Исходные данные организаторов не публикуем в GitHub.
+sales_dataset_hakaton_train.csv
+stock_dataset_hakaton_train.csv
+val_ground_truth.csv
+
+# Локальные исследования и тяжёлые промежуточные прогнозы.
+*.png
+baseline_*.csv
+catboost_v1/validation_forecast.csv
+teammate_project/
+CHECKPOINT_CATBOOST_V1.md
+
