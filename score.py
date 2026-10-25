@@ -32,21 +32,26 @@ METRIC_WEIGHTS: Dict[str, float] = {
     "rmsle": 0.05,
 }
 
-REQUIRED_COLUMNS = ["date", "warehouse_name", "article", "quantity"]
+REQUIRED_COLUMNS = ["week", "warehouse_name", "article", "quantity"]
 NUM_WAREHOUSES = 11
 NUM_ARTICLES = 799
-FORECAST_HORIZON = 64
-EXPECTED_ROWS = NUM_WAREHOUSES * NUM_ARTICLES * FORECAST_HORIZON  # 562 496
+FORECAST_HORIZON = 9
+EXPECTED_ROWS = NUM_WAREHOUSES * NUM_ARTICLES * FORECAST_HORIZON  # 79 101
+FORECAST_START = pd.Timestamp("2026-07-27")
 
 
 def smape_series(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """SMAPE для одной серии. Возвращает значение в процентах (0..200)."""
     numerator = np.abs(y_true - y_pred)
     denominator = (np.abs(y_true) + np.abs(y_pred)) / 2.0
-    mask = denominator > 0
-    if not mask.any():
-        return 0.0
-    return float(np.mean(numerator[mask] / denominator[mask]) * 100.0)
+    values = np.divide(
+        numerator,
+        denominator,
+        out=np.zeros_like(numerator, dtype=float),
+        where=denominator > 0,
+    )
+    # Актуальный FAQ требует учитывать 0/0 как точку с ошибкой 0.
+    return float(np.mean(values) * 100.0)
 
 
 def smape(y_true: np.ndarray, y_pred: np.ndarray, series_ids: np.ndarray) -> float:
@@ -105,7 +110,7 @@ def compute_all_metrics(
 ) -> Dict[str, float]:
     """Считает все 5 метрик для пары (truth, prediction)."""
     df = df_true.merge(
-        df_pred, on=["date", "warehouse_name", "article"], how="left",
+        df_pred, on=["week", "warehouse_name", "article"], how="left",
         suffixes=("_true", "_pred")
     )
     nan_count = df["quantity_pred"].isna().sum()
@@ -137,6 +142,10 @@ def validate_submission(df: pd.DataFrame, name: str = "submission") -> List[str]
         warnings_list.append(f"Отсутствуют колонки: {missing_cols}")
         return warnings_list
 
+    duplicate_count = df.duplicated(["week", "warehouse_name", "article"]).sum()
+    if duplicate_count > 0:
+        warnings_list.append(f"Дубли ключа week × склад × товар: {duplicate_count}")
+
     nan_count = df["quantity"].isna().sum()
     if nan_count > 0:
         warnings_list.append(f"NaN в quantity: {nan_count} строк")
@@ -148,18 +157,28 @@ def validate_submission(df: pd.DataFrame, name: str = "submission") -> List[str]
     if len(df) != EXPECTED_ROWS:
         warnings_list.append(f"Ожидается {EXPECTED_ROWS} строк, получено {len(df)}")
 
-    dates = pd.to_datetime(df["date"], errors="coerce")
-    unique_dates = dates.dropna().unique()
-    if len(unique_dates) != FORECAST_HORIZON:
+    weeks = pd.to_datetime(df["week"], errors="coerce")
+    invalid_week_count = int(weeks.isna().sum())
+    if invalid_week_count:
+        warnings_list.append(f"Некорректные значения week: {invalid_week_count}")
+    unique_weeks = weeks.dropna().unique()
+    if len(unique_weeks) != FORECAST_HORIZON:
         warnings_list.append(
-            f"Ожидается {FORECAST_HORIZON} уникальных дат, получено {len(unique_dates)}"
+            f"Ожидается {FORECAST_HORIZON} уникальных недель, получено {len(unique_weeks)}"
         )
 
-    if len(unique_dates) == FORECAST_HORIZON:
-        sorted_dates = pd.to_datetime(np.sort(unique_dates))
-        gaps = sorted_dates.to_series().diff().dropna()
-        if (gaps != pd.Timedelta(days=1)).any():
-            warnings_list.append("Даты не идут подряд")
+    if len(unique_weeks) == FORECAST_HORIZON:
+        sorted_weeks = pd.to_datetime(np.sort(unique_weeks))
+        if (sorted_weeks.dayofweek != 0).any():
+            warnings_list.append("Поле week должно содержать понедельники")
+        if sorted_weeks.min() != FORECAST_START:
+            warnings_list.append(
+                f"Первая неделя должна быть {FORECAST_START.date()}, "
+                f"получено {sorted_weeks.min().date()}"
+            )
+        gaps = sorted_weeks.to_series().diff().dropna()
+        if (gaps != pd.Timedelta(days=7)).any():
+            warnings_list.append("Недели не идут подряд с шагом 7 дней")
 
     combos = df.groupby(["warehouse_name", "article"]).ngroups
     expected_combos = NUM_WAREHOUSES * NUM_ARTICLES

@@ -16,4 +16,5 @@ baseline_*.csv
 catboost_v1/validation_forecast.csv
 teammate_project/
 CHECKPOINT_CATBOOST_V1.md
+weekly_data/
 

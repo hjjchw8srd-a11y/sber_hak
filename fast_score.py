@@ -15,9 +15,10 @@ def compute_all_metrics_fast(df_true: pd.DataFrame, df_pred: pd.DataFrame) -> Di
     Быстрый и 100% математически точный расчет метрик хакатона.
     Работает за < 1 секунды вместо нескольких минут.
     """
-    df = df_true[["date", "warehouse_name", "article", "quantity"]].merge(
-        df_pred[["date", "warehouse_name", "article", "quantity"]],
-        on=["date", "warehouse_name", "article"],
+    keys = ["week", "warehouse_name", "article"]
+    df = df_true[keys + ["quantity"]].merge(
+        df_pred[keys + ["quantity"]],
+        on=keys,
         how="left",
         suffixes=("_true", "_pred")
     )
@@ -47,22 +48,11 @@ def compute_all_metrics_fast(df_true: pd.DataFrame, df_pred: pd.DataFrame) -> Di
         elem_smape = np.where(denominator > 0, numerator / denominator * 100.0, 0.0)
     
     df["elem_smape"] = elem_smape
-    df["smape_valid"] = (denominator > 0).astype(np.int8)
-    
-    # Серийный SMAPE: среднее по каждой серии, затем среднее по всем сериям
+    # Серийный SMAPE: среднее по всем точкам каждой серии, затем среднее
+    # по сериям. Согласно актуальному FAQ, точка 0/0 остаётся в среднем
+    # с ошибкой 0, а не исключается.
     series_group = df.groupby("series_id")
-    # Официальный score.py исключает точки 0/0 из среднего внутри серии.
-    smape_sum = series_group["elem_smape"].sum()
-    smape_count = series_group["smape_valid"].sum()
-    smape_series = pd.Series(
-        np.divide(
-            smape_sum.to_numpy(),
-            smape_count.to_numpy(),
-            out=np.zeros(len(smape_sum), dtype=float),
-            where=smape_count.to_numpy() > 0,
-        ),
-        index=smape_sum.index,
-    )
+    smape_series = series_group["elem_smape"].mean()
     smape_val = float(smape_series.mean())
     
     # Bias: | mean(pred) - mean(true) | / mean(true) * 100.0
