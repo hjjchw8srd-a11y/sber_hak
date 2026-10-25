@@ -256,14 +256,17 @@ def columns_for_experiment(name: str) -> list[str]:
 
 
 def make_truth(matrices: WeeklyMatrices, validation_origin: int) -> pd.DataFrame:
-    weeks = np.repeat(matrices.weeks[validation_origin:].to_numpy(), matrices.n_pairs)
+    validation_end = validation_origin + HORIZON
+    weeks = np.repeat(
+        matrices.weeks[validation_origin:validation_end].to_numpy(), matrices.n_pairs
+    )
     pairs = pd.concat([matrices.pairs] * HORIZON, ignore_index=True)
     return pd.DataFrame(
         {
             "week": weeks,
             "warehouse_name": pairs["warehouse_name"],
             "article": pairs["article"],
-            "quantity": matrices.quantity[validation_origin:].reshape(-1),
+            "quantity": matrices.quantity[validation_origin:validation_end].reshape(-1),
         }
     )
 

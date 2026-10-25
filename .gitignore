@@ -13,6 +13,7 @@ val_ground_truth.csv
 # Локальные исследования и тяжёлые промежуточные прогнозы.
 *.png
 !experiments/feature_test_comparison.png
+!experiments/rolling/rolling_feature_comparison.png
 baseline_*.csv
 catboost_v1/validation_forecast.csv
 teammate_project/
