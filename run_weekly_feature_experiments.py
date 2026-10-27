@@ -57,6 +57,26 @@ EXPERIMENTS: dict[str, dict[str, object]] = {
         "groups": ["stock", "calendar"],
         "description": "Base + остатки + календарь, без денежных признаков",
     },
+    "base_category_context": {
+        "groups": ["category_context"],
+        "description": "Base + положение товара внутри категории на складе",
+    },
+    "base_network_context": {
+        "groups": ["network_context"],
+        "description": "Base + положение товара среди складов всей сети",
+    },
+    "base_calendar_category": {
+        "groups": ["calendar", "category_context"],
+        "description": "Base + календарь + контекст категории",
+    },
+    "base_calendar_network": {
+        "groups": ["calendar", "network_context"],
+        "description": "Base + календарь + контекст сети",
+    },
+    "base_calendar_all_context": {
+        "groups": ["calendar", "category_context", "network_context"],
+        "description": "Base + календарь + контекст категории и сети",
+    },
     "all_raw": {
         "groups": ["stock", "calendar", "money_raw"],
         "description": "Base + остатки + календарь + исходные денежные признаки",
@@ -105,6 +125,20 @@ GROUP_COLUMNS = {
         "paid_value_per_unit_lag_1",
         "full_value_per_unit_lag_1",
     ],
+    "category_context": [
+        "category_sales_mean_13_log",
+        "category_growth_4_vs_13",
+        "article_share_category_13",
+        "article_rank_category_13",
+        "active_articles_category_13",
+        "discount_share_vs_category_lag_1",
+    ],
+    "network_context": [
+        "article_network_sales_mean_13_log",
+        "article_network_growth_4_vs_13",
+        "warehouse_share_article_13",
+        "active_warehouses_article_13",
+    ],
 }
 
 
@@ -143,6 +177,23 @@ class WeeklyMatrices:
         self.static = first[
             ["warehouse_name", "article", "category_lvl_1", "category_lvl_2", "category_lvl_3"]
         ].fillna("unknown").astype(str).reset_index(drop=True)
+        self.warehouse_codes = pd.factorize(
+            self.static["warehouse_name"], sort=True
+        )[0].astype(np.int32)
+        self.article_codes = pd.factorize(
+            self.static["article"], sort=True
+        )[0].astype(np.int32)
+        self.category_codes = pd.factorize(
+            self.static["category_lvl_2"], sort=True
+        )[0].astype(np.int32)
+        warehouse_category = pd.MultiIndex.from_arrays(
+            [self.warehouse_codes, self.category_codes]
+        )
+        self.warehouse_category_codes = pd.factorize(
+            warehouse_category, sort=True
+        )[0].astype(np.int32)
+        self.n_warehouse_categories = int(self.warehouse_category_codes.max() + 1)
+        self.n_articles = int(self.article_codes.max() + 1)
 
         def matrix(column: str) -> np.ndarray:
             return ordered[column].to_numpy(dtype=np.float32).reshape(len(self.weeks), self.n_pairs)
@@ -243,6 +294,136 @@ class WeeklyMatrices:
         frame["discount_share_lag_1"] = discount_share
         frame["paid_value_per_unit_lag_1"] = np.log1p(np.maximum(paid_per_unit, 0))
         frame["full_value_per_unit_lag_1"] = np.log1p(np.maximum(full_per_unit, 0))
+
+        context = {
+            column: np.full(len(frame), np.nan, dtype=np.float32)
+            for column in GROUP_COLUMNS["category_context"]
+            + GROUP_COLUMNS["network_context"]
+        }
+        for origin in np.unique(origin_pos):
+            row_mask = origin_pos == origin
+            selected_pairs = pair_idx[row_mask]
+            pair_sum_13 = self.quantity[origin - 13 : origin].sum(axis=0)
+            pair_sum_4 = self.quantity[origin - 4 : origin].sum(axis=0)
+
+            category_sum_13 = np.bincount(
+                self.warehouse_category_codes,
+                weights=pair_sum_13,
+                minlength=self.n_warehouse_categories,
+            )
+            category_sum_4 = np.bincount(
+                self.warehouse_category_codes,
+                weights=pair_sum_4,
+                minlength=self.n_warehouse_categories,
+            )
+            category_mean_13 = category_sum_13 / 13.0
+            category_mean_4 = category_sum_4 / 4.0
+            category_growth = np.log1p(category_mean_4) - np.log1p(category_mean_13)
+            article_share_category = np.divide(
+                pair_sum_13,
+                category_sum_13[self.warehouse_category_codes],
+                out=np.zeros_like(pair_sum_13),
+                where=category_sum_13[self.warehouse_category_codes] > 0,
+            )
+            article_rank_category = (
+                pd.Series(pair_sum_13)
+                .groupby(self.warehouse_category_codes)
+                .rank(method="average", pct=True)
+                .to_numpy(dtype=np.float32)
+            )
+            active_articles = np.bincount(
+                self.warehouse_category_codes,
+                weights=(pair_sum_13 > 0).astype(np.float32),
+                minlength=self.n_warehouse_categories,
+            )
+
+            last_sales = self.sales_sum[origin - 1]
+            last_discount = self.discount_sum[origin - 1]
+            last_full_value = last_sales + last_discount
+            own_discount_share = np.divide(
+                last_discount,
+                last_full_value,
+                out=np.zeros_like(last_discount),
+                where=last_full_value > 0,
+            )
+            category_discount = np.bincount(
+                self.warehouse_category_codes,
+                weights=last_discount,
+                minlength=self.n_warehouse_categories,
+            )
+            category_full_value = np.bincount(
+                self.warehouse_category_codes,
+                weights=last_full_value,
+                minlength=self.n_warehouse_categories,
+            )
+            category_discount_share = np.divide(
+                category_discount,
+                category_full_value,
+                out=np.zeros_like(category_discount),
+                where=category_full_value > 0,
+            )
+
+            network_sum_13 = np.bincount(
+                self.article_codes,
+                weights=pair_sum_13,
+                minlength=self.n_articles,
+            )
+            network_sum_4 = np.bincount(
+                self.article_codes,
+                weights=pair_sum_4,
+                minlength=self.n_articles,
+            )
+            network_mean_13 = network_sum_13 / 13.0
+            network_mean_4 = network_sum_4 / 4.0
+            network_growth = np.log1p(network_mean_4) - np.log1p(network_mean_13)
+            warehouse_share_article = np.divide(
+                pair_sum_13,
+                network_sum_13[self.article_codes],
+                out=np.zeros_like(pair_sum_13),
+                where=network_sum_13[self.article_codes] > 0,
+            )
+            active_warehouses = np.bincount(
+                self.article_codes,
+                weights=(pair_sum_13 > 0).astype(np.float32),
+                minlength=self.n_articles,
+            )
+
+            selected_category = self.warehouse_category_codes[selected_pairs]
+            selected_article = self.article_codes[selected_pairs]
+            context["category_sales_mean_13_log"][row_mask] = np.log1p(
+                category_mean_13[selected_category]
+            )
+            context["category_growth_4_vs_13"][row_mask] = category_growth[
+                selected_category
+            ]
+            context["article_share_category_13"][row_mask] = article_share_category[
+                selected_pairs
+            ]
+            context["article_rank_category_13"][row_mask] = article_rank_category[
+                selected_pairs
+            ]
+            context["active_articles_category_13"][row_mask] = active_articles[
+                selected_category
+            ]
+            context["discount_share_vs_category_lag_1"][row_mask] = (
+                own_discount_share[selected_pairs]
+                - category_discount_share[selected_category]
+            )
+            context["article_network_sales_mean_13_log"][row_mask] = np.log1p(
+                network_mean_13[selected_article]
+            )
+            context["article_network_growth_4_vs_13"][row_mask] = network_growth[
+                selected_article
+            ]
+            context["warehouse_share_article_13"][row_mask] = warehouse_share_article[
+                selected_pairs
+            ]
+            context["active_warehouses_article_13"][row_mask] = active_warehouses[
+                selected_article
+            ]
+
+        for column, values in context.items():
+            frame[column] = values
 
         target = self.quantity[target_pos, pair_idx]
         return frame, target, target_pos
