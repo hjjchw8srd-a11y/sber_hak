@@ -1,0 +1,29 @@
+{
+  "horizon": 9,
+  "input_size": 26,
+  "hidden_size": 32,
+  "max_steps": 300,
+  "batch_size": 128,
+  "windows_batch_size": 512,
+  "learning_rate": 0.001,
+  "folds": 3,
+  "series": 8789,
+  "static_features": 78,
+  "historic_features": [
+    "article_network_sales_mean_13_log",
+    "article_network_growth_4_vs_13",
+    "warehouse_share_article_13",
+    "active_warehouses_article_13"
+  ],
+  "future_features": [
+    "time_idx",
+    "month",
+    "quarter",
+    "week_of_year",
+    "week_sin",
+    "week_cos"
+  ],
+  "device": "gpu",
+  "torch": "2.11.0+cu128",
+  "cuda": "12.8"
+}

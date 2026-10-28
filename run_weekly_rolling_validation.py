@@ -168,7 +168,7 @@ def main() -> None:
         validation_start = str(matrices.weeks[validation_origin].date())
         validation_end = str(matrices.weeks[validation_origin + HORIZON - 1].date())
         latest_train_origin = validation_origin - HORIZON
-        earliest_train_origin = max(13, latest_train_origin - args.train_origins + 1)
+        earliest_train_origin = max(26, latest_train_origin - args.train_origins + 1)
         train_origins = np.arange(earliest_train_origin, latest_train_origin + 1)
 
         train, target, _ = matrices.make_rows(

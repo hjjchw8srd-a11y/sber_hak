@@ -77,6 +77,18 @@ EXPERIMENTS: dict[str, dict[str, object]] = {
         "groups": ["calendar", "category_context", "network_context"],
         "description": "Base + календарь + контекст категории и сети",
     },
+    "base_dynamics": {
+        "groups": ["demand_dynamics"],
+        "description": "Base + форма и направление временного ряда",
+    },
+    "base_calendar_dynamics": {
+        "groups": ["calendar", "demand_dynamics"],
+        "description": "Base + календарь + динамика спроса",
+    },
+    "base_calendar_network_dynamics": {
+        "groups": ["calendar", "network_context", "demand_dynamics"],
+        "description": "Текущий лидер + динамика спроса",
+    },
     "all_raw": {
         "groups": ["stock", "calendar", "money_raw"],
         "description": "Base + остатки + календарь + исходные денежные признаки",
@@ -139,6 +151,21 @@ GROUP_COLUMNS = {
         "warehouse_share_article_13",
         "active_warehouses_article_13",
     ],
+    "demand_dynamics": [
+        "quantity_min_13",
+        "quantity_max_13",
+        "quantity_median_13",
+        "quantity_cv_13",
+        "quantity_mean_26",
+        "growth_log_4_vs_previous_4",
+        "growth_log_13_vs_previous_13",
+        "quantity_slope_13",
+        "quantity_slope_26",
+        "weeks_since_last_sale",
+        "current_zero_streak",
+        "autocorrelation_lag_1",
+        "autocorrelation_lag_4",
+    ],
 }
 
 
@@ -160,6 +187,21 @@ def parse_args() -> argparse.Namespace:
 
 def signed_log1p(values: np.ndarray) -> np.ndarray:
     return np.sign(values) * np.log1p(np.abs(values))
+
+
+def rowwise_correlation(left: np.ndarray, right: np.ndarray) -> np.ndarray:
+    left_centered = left - left.mean(axis=1, keepdims=True)
+    right_centered = right - right.mean(axis=1, keepdims=True)
+    numerator = (left_centered * right_centered).sum(axis=1)
+    denominator = np.sqrt(
+        (left_centered**2).sum(axis=1) * (right_centered**2).sum(axis=1)
+    )
+    return np.divide(
+        numerator,
+        denominator,
+        out=np.zeros_like(numerator, dtype=np.float32),
+        where=denominator > 0,
+    )
 
 
 class WeeklyMatrices:
@@ -228,12 +270,11 @@ class WeeklyMatrices:
         target_pos = origin_pos + horizon_idx
         history_pos = origin_pos - 1
 
-        history4 = np.column_stack(
-            [self.quantity[origin_pos - lag, pair_idx] for lag in range(1, 5)]
+        history26 = np.column_stack(
+            [self.quantity[origin_pos - lag, pair_idx] for lag in range(1, 27)]
         )
-        history13 = np.column_stack(
-            [self.quantity[origin_pos - lag, pair_idx] for lag in range(1, 14)]
-        )
+        history13 = history26[:, :13]
+        history4 = history26[:, :4]
         sales = self.sales_sum[history_pos, pair_idx]
         discount = self.discount_sum[history_pos, pair_idx]
         quantity_lag1 = self.quantity[history_pos, pair_idx]
@@ -275,6 +316,48 @@ class WeeklyMatrices:
         frame["quantity_mean_13"] = history13.mean(axis=1)
         frame["quantity_std_13"] = history13.std(axis=1)
         frame["quantity_nonzero_rate_13"] = (history13 > 0).mean(axis=1)
+
+        mean13 = history13.mean(axis=1)
+        std13 = history13.std(axis=1)
+        frame["quantity_min_13"] = history13.min(axis=1)
+        frame["quantity_max_13"] = history13.max(axis=1)
+        frame["quantity_median_13"] = np.median(history13, axis=1)
+        frame["quantity_cv_13"] = np.divide(
+            std13,
+            mean13,
+            out=np.zeros_like(std13),
+            where=mean13 > 0,
+        )
+        frame["quantity_mean_26"] = history26.mean(axis=1)
+        frame["growth_log_4_vs_previous_4"] = np.log1p(
+            history26[:, :4].sum(axis=1)
+        ) - np.log1p(history26[:, 4:8].sum(axis=1))
+        frame["growth_log_13_vs_previous_13"] = np.log1p(
+            history26[:, :13].sum(axis=1)
+        ) - np.log1p(history26[:, 13:26].sum(axis=1))
+
+        chronological13 = history13[:, ::-1]
+        chronological26 = history26[:, ::-1]
+        x13 = np.arange(13, dtype=np.float32) - 6.0
+        x26 = np.arange(26, dtype=np.float32) - 12.5
+        frame["quantity_slope_13"] = (chronological13 @ x13) / (x13 @ x13)
+        frame["quantity_slope_26"] = (chronological26 @ x26) / (x26 @ x26)
+
+        nonzero_lag_order = history26 > 0
+        has_previous_sale = nonzero_lag_order.any(axis=1)
+        first_nonzero = np.argmax(nonzero_lag_order, axis=1)
+        frame["weeks_since_last_sale"] = np.where(
+            has_previous_sale, first_nonzero + 1, 27
+        )
+        frame["current_zero_streak"] = np.where(
+            has_previous_sale, first_nonzero, 26
+        )
+        frame["autocorrelation_lag_1"] = rowwise_correlation(
+            chronological13[:, 1:], chronological13[:, :-1]
+        )
+        frame["autocorrelation_lag_4"] = rowwise_correlation(
+            chronological26[:, 4:], chronological26[:, :-4]
+        )
 
         stock_end = self.stock_end[history_pos, pair_idx]
         frame["stock_end_lag_1"] = signed_log1p(stock_end)
@@ -464,6 +547,7 @@ def train_and_predict(
     validation: pd.DataFrame,
     columns: list[str],
     iterations: int,
+    model_params: dict[str, object] | None = None,
 ) -> tuple[np.ndarray, dict[str, float]]:
     cat_columns = [column for column in CAT_COLUMNS if column in columns]
     common = {
@@ -475,6 +559,8 @@ def train_and_predict(
         "allow_writing_files": False,
         "thread_count": -1,
     }
+    if model_params:
+        common.update(model_params)
     classifier = CatBoostClassifier(loss_function="Logloss", **common)
     classifier.fit(train[columns], (target > 0).astype(np.int8), cat_features=cat_columns)
 
@@ -589,7 +675,7 @@ def main() -> None:
     matrices = WeeklyMatrices(data)
     validation_origin = len(matrices.weeks) - HORIZON
     latest_train_origin = validation_origin - HORIZON
-    earliest_train_origin = max(13, latest_train_origin - args.train_origins + 1)
+    earliest_train_origin = max(26, latest_train_origin - args.train_origins + 1)
     train_origins = np.arange(earliest_train_origin, latest_train_origin + 1)
 
     train, target, _ = matrices.make_rows(train_origins, args.max_train_rows)

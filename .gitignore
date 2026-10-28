@@ -14,6 +14,15 @@ val_ground_truth.csv
 *.png
 !experiments/feature_test_comparison.png
 !experiments/rolling/rolling_feature_comparison.png
+!experiments/forecast_diagnostics/selected_series_forecasts.png
+!experiments/tft/tft_rolling_scores.png
+!experiments/tft/tft_postprocessing.png
+experiments/optuna/*.db
+!experiments/optuna/optuna_trials.png
+experiments/tft/final_model/
+experiments/tft/tft_predictions_fold_*.csv.gz
+experiments/tft/tft_predictions_postprocessed_fold_*.csv.gz
+experiments/tft/tft_final_prediction_raw.csv.gz
 baseline_*.csv
 catboost_v1/validation_forecast.csv
 teammate_project/

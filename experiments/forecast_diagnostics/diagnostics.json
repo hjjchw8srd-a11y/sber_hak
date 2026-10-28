@@ -1,0 +1,51 @@
+{
+  "experiment": "base_calendar_network",
+  "validation_start": "2026-05-25",
+  "validation_end": "2026-07-20",
+  "overall_metrics": {
+    "smape": 60.35133293767935,
+    "wape": 47.95148385936509,
+    "rmse": 3.4278257921461743,
+    "bias": 72.41357272700051,
+    "rmsle": 0.5093958511377812
+  },
+  "model_diagnostics": {
+    "mean_positive_probability": 0.4798922900163868,
+    "predicted_positive_rate": 0.42717538337062744
+  },
+  "selected_series": [
+    {
+      "series_type": "Стабильный ряд",
+      "warehouse_name": "warehouse_name_3",
+      "article": "char_article_419",
+      "history_nonzero_rate_26": 1.0,
+      "history_mean_13": 79.53845977783203,
+      "actual_sum_9": 833.0,
+      "forecast_sum_9": 693.1185518133713,
+      "smape_9": 20.001721615568453,
+      "mae_9": 17.615922575670513
+    },
+    {
+      "series_type": "Разреженный ряд",
+      "warehouse_name": "warehouse_name_6",
+      "article": "char_article_120",
+      "history_nonzero_rate_26": 0.19230769230769232,
+      "history_mean_13": 0.3076923191547394,
+      "actual_sum_9": 2.0,
+      "forecast_sum_9": 0.0,
+      "smape_9": 44.44444444444444,
+      "mae_9": 0.2222222222222222
+    },
+    {
+      "series_type": "Растущий ряд",
+      "warehouse_name": "warehouse_name_7",
+      "article": "char_article_186",
+      "history_nonzero_rate_26": 0.38461538461538464,
+      "history_mean_13": 1.1538461446762085,
+      "actual_sum_9": 6.0,
+      "forecast_sum_9": 7.261776816946321,
+      "smape_9": 132.3815153617203,
+      "mae_9": 0.8673750852606696
+    }
+  ]
+}

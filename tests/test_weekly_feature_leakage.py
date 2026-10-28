@@ -14,7 +14,7 @@ from run_weekly_feature_experiments import (
 class WeeklyFeatureLeakageTests(unittest.TestCase):
     @staticmethod
     def make_data() -> pd.DataFrame:
-        weeks = pd.date_range("2025-01-06", periods=23, freq="W-MON")
+        weeks = pd.date_range("2025-01-06", periods=35, freq="W-MON")
         rows = []
         for week_idx, week in enumerate(weeks):
             for warehouse_idx in range(2):
@@ -41,7 +41,7 @@ class WeeklyFeatureLeakageTests(unittest.TestCase):
 
     def test_future_targets_do_not_change_context_features(self) -> None:
         data = self.make_data()
-        origin = 14
+        origin = 26
         original_features, original_target, _ = WeeklyMatrices(data).make_rows(
             np.array([origin]), None
         )
