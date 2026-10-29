@@ -1,0 +1,15 @@
+{
+  "rows":237303.0,
+  "zero_target_rate":0.5125093235,
+  "predicted_zero_rate":0.5751212585,
+  "precision":0.7990181007,
+  "recall":0.6963944573,
+  "f1":0.7441849724,
+  "true_positive":80561.0,
+  "false_positive":20264.0,
+  "false_negative":35122.0,
+  "true_negative":101356.0,
+  "actual_sum":572326.0,
+  "prediction_sum":492185.0,
+  "stock_missing_rate":0.1415026359
+}

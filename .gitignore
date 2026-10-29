@@ -21,6 +21,7 @@ val_ground_truth.csv
 !experiments/tft_features_32bit/tft_feature_comparison.png
 !experiments/tft_features_final/tft_feature_comparison.png
 !experiments/tft_features_final/tft_stock_vs_base.png
+!experiments/model_weaknesses/tft_weaknesses.png
 experiments/optuna/*.db
 !experiments/optuna/optuna_trials.png
 experiments/tft/final_model/
