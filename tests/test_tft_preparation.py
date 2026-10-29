@@ -3,7 +3,27 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from train_tft_weekly import HIST_EXOG, prepare_frames
+from train_tft_weekly import (
+    BASE_HIST_EXOG,
+    DEMAND_DYNAMICS_EXOG,
+    MONEY_EXOG,
+    STOCK_DERIVED_EXOG,
+    STOCK_FULL_EXOG,
+    prepare_frames,
+)
+
+
+ALL_HIST_EXOG = list(
+    dict.fromkeys(
+        [
+            *BASE_HIST_EXOG,
+            *STOCK_FULL_EXOG,
+            *STOCK_DERIVED_EXOG,
+            *MONEY_EXOG,
+            *DEMAND_DYNAMICS_EXOG,
+        ]
+    )
+)
 
 
 class TftPreparationTest(unittest.TestCase):
@@ -34,19 +54,23 @@ class TftPreparationTest(unittest.TestCase):
         changed.loc[changed["week"] >= origin, "quantity"] = 10_000.0
         changed_frame, _, _ = prepare_frames(changed)
 
+        # Historic exogenous variables передаются TFT только до недели,
+        # предшествующей origin. Строки самого прогнозного горизонта содержат
+        # только FUTR_EXOG и в encoder не попадают.
+        last_history_week = origin - pd.Timedelta(weeks=1)
         original_origin = (
-            original[original["ds"] == origin]
+            original[original["ds"] == last_history_week]
             .sort_values("unique_id")
             .reset_index(drop=True)
         )
         changed_origin = (
-            changed_frame[changed_frame["ds"] == origin]
+            changed_frame[changed_frame["ds"] == last_history_week]
             .sort_values("unique_id")
             .reset_index(drop=True)
         )
         np.testing.assert_allclose(
-            original_origin[HIST_EXOG].to_numpy(),
-            changed_origin[HIST_EXOG].to_numpy(),
+            original_origin[ALL_HIST_EXOG].to_numpy(),
+            changed_origin[ALL_HIST_EXOG].to_numpy(),
         )
 
     def test_prepared_frames_have_expected_shape(self) -> None:
@@ -56,7 +80,7 @@ class TftPreparationTest(unittest.TestCase):
         self.assertEqual(temporal["unique_id"].nunique(), 2)
         self.assertEqual(len(static), 2)
         self.assertTrue(static_columns)
-        self.assertFalse(temporal[HIST_EXOG].isna().any().any())
+        self.assertFalse(temporal[ALL_HIST_EXOG].isna().any().any())
 
 
 if __name__ == "__main__":

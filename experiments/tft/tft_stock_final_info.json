@@ -1,0 +1,33 @@
+{
+  "train_seconds": 56.674933600006625,
+  "train_rows": 1177726,
+  "series": 8789,
+  "forecast_start": "2026-07-27",
+  "forecast_end": "2026-09-21",
+  "forecast_rows": 79101,
+  "threshold": 0.75,
+  "round_to_int": true,
+  "variant": "stock_full",
+  "historic_features": [
+    "article_network_sales_mean_13_log",
+    "article_network_growth_4_vs_13",
+    "warehouse_share_article_13",
+    "active_warehouses_article_13",
+    "stock_end_log",
+    "stock_mean_log",
+    "stock_nonpositive_rate_hist",
+    "stock_observed_days_hist",
+    "stock_missing",
+    "stock_start_log",
+    "stock_min_log",
+    "stock_max_log",
+    "stock_median_log",
+    "stock_change_log",
+    "stock_nonpositive_days_hist",
+    "stock_negative_days_hist"
+  ],
+  "warnings": [],
+  "device": "gpu",
+  "torch": "2.11.0+cu128",
+  "cuda": "12.8"
+}

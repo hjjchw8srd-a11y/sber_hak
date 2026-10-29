@@ -14,7 +14,15 @@ from neuralforecast import NeuralForecast
 
 from analyze_tft_postprocessing import apply_rule
 from score import validate_submission
-from train_tft_weekly import FUTR_EXOG, HORIZON, make_model, prediction_to_submission, prepare_frames
+from train_tft_weekly import (
+    BASE_HIST_EXOG,
+    FUTR_EXOG,
+    HORIZON,
+    STOCK_FULL_EXOG,
+    make_model,
+    prediction_to_submission,
+    prepare_frames,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -31,6 +39,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--patience", type=int, default=-1)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--threshold", type=float, default=0.75)
+    parser.add_argument("--variant", choices=["base", "stock_full"], default="base")
     return parser.parse_args()
 
 
@@ -60,7 +69,10 @@ def main() -> None:
     temporal, static_df, static_columns = prepare_frames(raw)
     future_df = make_future_frame(temporal)
     device = "gpu" if torch.cuda.is_available() else "cpu"
-    model = make_model(args, static_columns, device)
+    hist_exog = BASE_HIST_EXOG
+    if args.variant == "stock_full":
+        hist_exog = list(dict.fromkeys([*BASE_HIST_EXOG, *STOCK_FULL_EXOG]))
+    model = make_model(args, static_columns, device, hist_exog_list=hist_exog)
     nf = NeuralForecast(models=[model], freq="W-MON")
 
     started = time.perf_counter()
@@ -73,9 +85,11 @@ def main() -> None:
     )
     warnings = validate_submission(final_prediction, "tft_submission")
 
-    raw_prediction.to_csv(args.output_dir / "tft_final_prediction_raw.csv.gz", index=False)
-    final_prediction.to_csv(args.output_dir / "tft_final_submission.csv", index=False)
-    nf.save(path=str(args.output_dir / "final_model"), overwrite=True)
+    prefix = "tft" if args.variant == "base" else "tft_stock"
+    model_dir = "final_model" if args.variant == "base" else "final_model_stock"
+    raw_prediction.to_csv(args.output_dir / f"{prefix}_final_prediction_raw.csv.gz", index=False)
+    final_prediction.to_csv(args.output_dir / f"{prefix}_final_submission.csv", index=False)
+    nf.save(path=str(args.output_dir / model_dir), overwrite=True)
     info = {
         "train_seconds": elapsed,
         "train_rows": len(temporal),
@@ -85,12 +99,15 @@ def main() -> None:
         "forecast_rows": len(final_prediction),
         "threshold": args.threshold,
         "round_to_int": True,
+        "variant": args.variant,
+        "historic_features": hist_exog,
         "warnings": warnings,
         "device": device,
         "torch": torch.__version__,
         "cuda": torch.version.cuda,
     }
-    (args.output_dir / "tft_final_info.json").write_text(
+    info_name = "tft_final_info.json" if args.variant == "base" else "tft_stock_final_info.json"
+    (args.output_dir / info_name).write_text(
         json.dumps(info, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     print(json.dumps(info, ensure_ascii=False))
