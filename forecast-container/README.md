@@ -69,6 +69,8 @@ Production-ready контейнер и HTTP API для еженедельног�
 Контейнер полностью автономен и не требует доступа в интернет во время инференса. Все веса моделей (37 файлов, 17.5 MB) и статические преобразования упакованы в папку `model/`.
 
 ### Сборка Docker-образа:
+> **Примечание о статусе проверки:** На текущей машине разработки под управлением Windows Docker CLI / daemon не установлен. В отчетах зафиксирован статус **NOT RUN** для Docker build/run до проверки на окружении с установленным Docker. Все модули, зависимости, Dockerfile и API полностью протестированы локально через Python/Uvicorn и TestClient.
+
 ```bash
 cd forecast-container
 docker build -t forecast-service:latest .
@@ -126,20 +128,20 @@ curl -sf http://localhost:8000/health
 
 ```bash
 curl -X POST http://localhost:8000/predict \
-  -F "sales=@data/sample_sales.csv" \
-  -F "stock=@data/sample_stock.csv" \
+  -F "sales=@data/demo_sales.csv" \
+  -F "stock=@data/demo_stock.csv" \
   -o forecast.csv
 ```
 
 #### Кеширование и принудительный инференс:
 - Сервис кеширует последний результат прогноза по криптографическому ключу `sha256(sales_bytes + b"::" + stock_bytes + b"::" + bundle_digest.encode())`.
-- Повторный запрос с идентичными файлами отдается из памяти за <0.05 с без увеличения `inference_call_count`.
+- Повторный запрос с идентичными файлами отдается из памяти за <0.02 с (измерено 0.0134 с) без увеличения `inference_call_count`.
 - Для явного обхода кеша и принудительного повторного запуска моделей передайте параметр `no_cache=true` или HTTP-заголовок `X-Bypass-Cache: 1`:
 
 ```bash
 curl -X POST "http://localhost:8000/predict?no_cache=true" \
-  -F "sales=@data/sample_sales.csv" \
-  -F "stock=@data/sample_stock.csv" \
+  -F "sales=@data/demo_sales.csv" \
+  -F "stock=@data/demo_stock.csv" \
   -o forecast.csv
 ```
 
@@ -202,6 +204,8 @@ forecast-container/
 ├── .dockerignore           # Исключение лишних файлов (датасеты, git, oof, кэши)
 ├── requirements.txt        # Зафиксированные версии Python-зависимостей
 ├── README.md               # Документация и руководство пользователя
+├── test_api.sh             # Скрипт проверки эндпоинтов через bash/curl (exit code 0)
+├── smoke_test.py           # Кроссплатформенный smoke-тест на чистом Python
 ├── app/
 │   ├── __init__.py
 │   ├── main.py             # Сервер FastAPI, маршрутизация и кэширование
@@ -216,10 +220,12 @@ forecast-container/
 │   ├── catboost/           # CatBoost 18 origins (двухэтапный)
 │   └── per_category/       # 14 моделей категорий и маршрутизация
 ├── data/
-│   ├── sample_sales.csv    # Пример входного CSV продаж (100 строк)
-│   └── sample_stock.csv    # Пример входного CSV остатков (100 строк)
+│   ├── demo_sales.csv      # Сокращенный валидный срез истории для демо (180 дней, 3 960 строк)
+│   ├── demo_stock.csv      # Сокращенный валидный срез остатков для демо (180 дней, 3 960 строк)
+│   ├── sample_sales.csv    # Пример короткого файла (100 строк, негативный тест на <180 дней)
+│   └── sample_stock.csv    # Пример файла остатков (100 строк)
 └── tests/
-    ├── test_api.py         # Автоматизированный тестовый набор (12 проверок)
+    ├── test_api.py         # Автоматизированный тестовый набор (13 проверок)
     └── test_api.sh         # Скрипт проверки эндпоинтов через curl
 ```
 

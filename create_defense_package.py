@@ -26,6 +26,7 @@ FILES_AND_DIRS = [
     "forecast-container/requirements.txt",
     "forecast-container/README.md",
     "forecast-container/test_api.sh",
+    "forecast-container/smoke_test.py",
     "export_model_bundle.py",
     "audit_candidate_match.py",
     "DEFENSE_VERSION.md",
@@ -72,11 +73,16 @@ def make_package() -> Path:
             h.update(chunk)
     zip_sha256 = h.hexdigest()
 
+    # Save sha256 to a dedicated file
+    sha256_file = PROJECT_ROOT / f"{PACKAGE_NAME}.sha256"
+    sha256_file.write_text(f"{zip_sha256}  {PACKAGE_NAME}\n", encoding="utf-8")
+
     print(f"Package created successfully!")
     print(f"  Files packed:         {file_count}")
     print(f"  Uncompressed size:    {raw_size_mb:.2f} MB")
     print(f"  Compressed zip size:  {archive_size_mb:.2f} MB")
     print(f"  SHA-256:              {zip_sha256}")
+    print(f"  Checksum file:        {sha256_file.name}")
 
     return OUTPUT_ZIP
 
