@@ -1,0 +1,37 @@
+{
+  "cutoff_date": "2026-05-24",
+  "validation_period": "2026-05-25 .. 2026-07-20",
+  "history_days_full": 875,
+  "history_days_180d": 180,
+  "full_history": {
+    "score": 0.7177041340470326,
+    "unclipped_ratio": 0.7388676314139543,
+    "smape": 59.16665498785194,
+    "wape": 46.05436666415492,
+    "rmse": 3.1542359109608733,
+    "bias": 73.43633189949021,
+    "rmsle": 0.5088582260285064,
+    "total_quantity": 176248,
+    "zero_rate": 0.576136837713809,
+    "duration_sec": 39.601128599999356
+  },
+  "exact_180d": {
+    "score": 0.7171536072244628,
+    "unclipped_ratio": 0.7382068666591599,
+    "smape": 59.08819247109416,
+    "wape": 46.06425664983799,
+    "rmse": 3.1482965277932378,
+    "bias": 73.36892223993091,
+    "rmsle": 0.5088458766470255,
+    "total_quantity": 175989,
+    "zero_rate": 0.576743656843782,
+    "duration_sec": 36.47537089999241
+  },
+  "comparison": {
+    "differing_rows": 3787,
+    "max_abs_diff": 5,
+    "mean_abs_diff": 0.050378629852972784,
+    "delta_score": -0.0005505268225698412,
+    "delta_unclipped_ratio": -0.000660764754794374
+  }
+}

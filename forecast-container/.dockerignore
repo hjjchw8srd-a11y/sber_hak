@@ -1,0 +1,14 @@
+**/.git
+**/.github
+**/.pytest_cache
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/*.csv
+**/*.csv.gz
+!data/*.csv
+.venv
+venv
+env
+*.log
