@@ -1,0 +1,47 @@
+{
+  "candidate_name": "Candidate_Weights_45_37_9_9",
+  "created_at": "2026-10-31T00:21:01+0300",
+  "status": "PROMOTED_CANDIDATE_PACKAGED",
+  "formula": "0.90 * Control_Blend + 0.10 * LightGBM_B",
+  "effective_weights": {
+    "tft": 0.45,
+    "lightgbm_b": 0.37,
+    "catboost": 0.09,
+    "per_category": 0.09
+  },
+  "postprocessing": {
+    "alpha": 1.05,
+    "threshold": 0.65,
+    "rounding": "rint",
+    "clip_lower": 0.0
+  },
+  "multi_seed_evaluation": {
+    "seeds_evaluated": [42, 52, 62],
+    "notes": "LightGBM seeds varied; TFT, CatBoost, and Per-Category remained frozen.",
+    "wins_vs_control": "15/15 fold-seed comparisons",
+    "mean_deltas": {
+      "selection_unclipped_delta_mean": -0.0009106787506772592,
+      "selection_delta_std": 0.0002452654420793439,
+      "check_unclipped_delta_mean": -0.0012727384887136761,
+      "check_delta_std": 0.00017890807601864776,
+      "all_clipped_delta_mean": -0.000685957769865464,
+      "all_clipped_delta_std": 0.0002005190961214966,
+      "all_unclipped_delta_mean": -0.001055502645891863,
+      "all_unclipped_delta_std": 0.0001988309811770213
+    },
+    "seed_42_detail": {
+      "selection_unclipped_ctrl": 0.761313938112696,
+      "selection_unclipped_cand": 0.7601545006473941,
+      "selection_unclipped_delta": -0.0011594374653018935,
+      "check_unclipped_ctrl": 0.7485362579007863,
+      "check_unclipped_cand": 0.7472939235246554,
+      "check_unclipped_delta": -0.0012423343761308603,
+      "all_clipped_ctrl": 0.7309877787501999,
+      "all_clipped_cand": 0.7300749566925789,
+      "all_clipped_delta": -0.0009128220576209989,
+      "all_unclipped_ctrl": 0.7562028660279321,
+      "all_unclipped_cand": 0.7550102697982986,
+      "all_unclipped_delta": -0.0011925962296335246
+    }
+  }
+}

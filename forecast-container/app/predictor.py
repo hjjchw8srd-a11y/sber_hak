@@ -612,12 +612,18 @@ class Predictor:
             validate="one_to_one",
         )
 
+        components_cfg = self.postprocessing.get("components", {})
+        w_tft = float(components_cfg.get("tft", {}).get("weight", 0.50))
+        w_lgb = float(components_cfg.get("lightgbm_b", {}).get("weight", 0.30))
+        w_cb = float(components_cfg.get("catboost", {}).get("weight", 0.10))
+        w_pcat = float(components_cfg.get("per_category", {}).get("weight", 0.10))
+
         # Blend
         raw_blend = (
-            0.50 * merged["q_tft"].to_numpy(dtype=np.float64)
-            + 0.30 * merged["gated_lgb"].to_numpy(dtype=np.float64)
-            + 0.10 * merged["cb_pred"].to_numpy(dtype=np.float64)
-            + 0.10 * merged["pcat_postprocessed"].to_numpy(dtype=np.float64)
+            w_tft * merged["q_tft"].to_numpy(dtype=np.float64)
+            + w_lgb * merged["gated_lgb"].to_numpy(dtype=np.float64)
+            + w_cb * merged["cb_pred"].to_numpy(dtype=np.float64)
+            + w_pcat * merged["pcat_postprocessed"].to_numpy(dtype=np.float64)
         )
 
         blend_cfg = self.postprocessing.get("blend", {})

@@ -1,0 +1,72 @@
+{
+  "model_role": "GLOBAL_CHAMPION_BASELINE",
+  "name": "Blend_LightGBM_B",
+  "provenance": {
+    "git_branch": "final_pumpline",
+    "git_commit": "df377f10103fc59114bc8c77cec54cc5119c0a0c",
+    "defense_archive": "defense_package_candidate_lgbm52.zip",
+    "defense_archive_sha256": "5ed6c902a4789dd2cfaea4a7053cf89b9f3b827c742b9e735929217b65904444",
+    "submission_file": "final_submission.csv",
+    "submission_sha256": "7bf5e15ed2bdfa22c0cb13b9d0bf62cc5048273b0a1e82035f55579cc83158b7"
+  },
+  "status": "FROZEN_DEFENSE_CHAMPION",
+  "description": "Baseline 4-component ensemble with LightGBM Variant B trained on 52 historical origins.",
+  "components": {
+    "tft": {
+      "weight": 0.50,
+      "type": "raw_continuous",
+      "architecture": "Temporal Fusion Transformer (NeuralForecast)",
+      "description": "TFT trained on 52-week windows, producing raw continuous demand predictions."
+    },
+    "lightgbm_b": {
+      "weight": 0.30,
+      "type": "two_stage_hurdle",
+      "history_origins": 52,
+      "origin_range": [74, 125],
+      "prob_gate": 0.50,
+      "description": "LightGBM classifier + regressor trained across 52 origins with 0.50 probability gating."
+    },
+    "catboost": {
+      "weight": 0.10,
+      "type": "two_stage_hurdle",
+      "history_origins": 18,
+      "origin_range": [108, 125],
+      "prob_gate": 0.50,
+      "description": "CatBoost classifier + regressor trained across 18 origins."
+    },
+    "per_category": {
+      "weight": 0.10,
+      "type": "category_hurdle_postprocessed",
+      "num_models": 14,
+      "threshold": 0.75,
+      "rounding": "rint",
+      "description": "14 Category-level models with component-level threshold 0.75 and integer rounding."
+    }
+  },
+  "postprocessing": {
+    "formula": "P(x) = max(rint(1.05 * max(x, 0)) * I(1.05 * max(x, 0) >= 0.65), 0)",
+    "alpha": 1.05,
+    "threshold": 0.65,
+    "rounding": "rint",
+    "clip_lower": 0.0
+  },
+  "verified_metrics": {
+    "selection_folds_4_3_2": {
+      "mean_unclipped_ratio": 0.761313938112696,
+      "mean_clipped_score": 0.7345392852799691
+    },
+    "check_folds_1_0": {
+      "mean_unclipped_ratio": 0.7485362579007863,
+      "mean_clipped_score": 0.7256605189555462
+    },
+    "all_5_folds": {
+      "mean_unclipped_ratio": 0.7562028660279321,
+      "mean_clipped_score": 0.7309877787501999,
+      "mean_smape": 62.130872,
+      "mean_wape": 49.576987,
+      "mean_rmse": 2.897645,
+      "mean_bias": 75.576152,
+      "mean_rmsle": 0.527622
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-10-31T00:46:50+0300",
+  "total_runtime_sec": 51.65219090000028,
+  "selection_unclipped_ctrl": 0.761313938112696,
+  "selection_unclipped_b10": 0.7607962824318294,
+  "check_unclipped_ctrl": 0.7485362579007863,
+  "check_unclipped_b10": 0.7475161067484242,
+  "all5_unclipped_ctrl": 0.7562028660279321,
+  "all5_unclipped_b10": 0.7554842121584673,
+  "all5_clipped_ctrl": 0.7309877787501999,
+  "all5_clipped_b10": 0.7301862121419374,
+  "all5_delta_unclipped_b10": -0.0007186538694647915,
+  "all5_delta_clipped_b10": -0.0008015666082625827
+}

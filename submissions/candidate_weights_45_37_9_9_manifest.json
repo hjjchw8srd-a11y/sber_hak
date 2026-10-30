@@ -1,0 +1,75 @@
+{
+  "candidate_name": "candidate_weights_45_37_9_9",
+  "created_at": "2026-10-31 00:51:56",
+  "destination_file": "submissions\\candidate_weights_45_37_9_9.csv",
+  "sha256": "0f4d31799314b0fdc7d60012d35ebfdac41028f3362370d4941b05ff06d108a2",
+  "row_count": 79101,
+  "target_period": "2026-07-27 .. 2026-09-21 (9 weeks)",
+  "training_cutoff_date": "2026-07-26",
+  "components": {
+    "tft": {
+      "source_file": "experiments\\tft\\tft_final_prediction_raw.csv.gz",
+      "sha256": "41d62402ca37215745eb3e60060d78a99747ba514b9904b2d1b3bf1eab6de4ce",
+      "weight": 0.45,
+      "type": "raw_continuous"
+    },
+    "lightgbm_variant_b": {
+      "history_origins": 52,
+      "origin_range": [
+        74,
+        125
+      ],
+      "weight": 0.37,
+      "prob_gate": 0.5,
+      "type": "two_stage_hurdle"
+    },
+    "catboost": {
+      "history_origins": 18,
+      "origin_range": [
+        108,
+        125
+      ],
+      "weight": 0.09,
+      "type": "regressor"
+    },
+    "per_category": {
+      "source_file": "experiments\\benchmarks\\per_category\\per_category_final_submission.csv",
+      "sha256": "314c1af856ac613488ba4d920a56a655ab0680f77e6afcbab0810ea7c12914f6",
+      "weight": 0.09,
+      "type": "benchmark_aligned"
+    }
+  },
+  "blend_postprocessing": {
+    "alpha": 1.05,
+    "threshold": 0.65,
+    "rounding": "rint",
+    "clip_lower": 0
+  },
+  "cv_performance_5_folds_seed42": {
+    "mean_clipped_score": 0.7300749566925789,
+    "mean_unclipped_ratio": 0.7550102697982986,
+    "clipped_delta_vs_control": -0.0009128220576209989,
+    "unclipped_delta_vs_control": -0.0011925962296335246
+  },
+  "multi_seed_evaluation_summary": {
+    "seeds_tested": [
+      42,
+      52,
+      62
+    ],
+    "wins_vs_control": "15/15",
+    "all_clipped_delta_mean": -0.000685957769865464,
+    "all_clipped_delta_std": 0.0002005190961214966,
+    "all_unclipped_delta_mean": -0.001055502645891863,
+    "all_unclipped_delta_std": 0.0001988309811770213
+  },
+  "test_prediction_statistics": {
+    "total_rows": 79101,
+    "nonzero_rows": 34306,
+    "nonzero_rate": 0.433698689017838,
+    "total_quantity": 211237,
+    "max_quantity": 160,
+    "p99_quantity": 37.0,
+    "mean_quantity": 2.670471928294206
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "protocol_version": "2.1.0",
+  "updated_at": "2026-10-31T00:47:00+0300",
+  "global_champion_reference": "experiments/model_improvements/champion_config.json",
+  "candidate_weights_reference": "experiments/model_improvements/candidate_weights/candidate_weights_config.json",
+  "nbeatsx_candidate_reference": "experiments/model_improvements/candidates/nbeatsx/selected_config.json",
+  "retained_defense_champion": "Blend_LightGBM_B",
+  "promoted_research_candidate": "Candidate_Weights_45_37_9_9",
+  "summary_decisions": {
+    "Blend_LightGBM_B": {
+      "status": "FROZEN_DEFENSE_CHAMPION",
+      "clipped_5fold": 0.7309877787501999,
+      "unclipped_5fold": 0.7562028660279321
+    },
+    "Candidate_Weights_45_37_9_9": {
+      "status": "PROMOTED_PACKAGED_CANDIDATE",
+      "clipped_5fold_seed42": 0.7300749566925789,
+      "unclipped_5fold_seed42": 0.7550102697982986,
+      "clipped_delta_seed42": -0.0009128220576209989,
+      "wins_vs_control": "15/15 across seeds [42, 52, 62]"
+    },
+    "NBEATSx_Pure_Calendar_Blend10": {
+      "status": "CONCLUDED_NOT_PROMOTED",
+      "clipped_5fold": 0.7301862121419374,
+      "unclipped_5fold": 0.7554842121584673,
+      "reason": "Beats control B slightly, but inferior to Candidate Weights 45/37/9/9 and requires heavy neural network."
+    },
+    "LightGBM_Statutory_Holidays": {
+      "status": "REJECTED",
+      "selection_delta": 0.001103,
+      "reason": "Degraded selection unclipped ratio on LightGBM B."
+    }
+  }
+}

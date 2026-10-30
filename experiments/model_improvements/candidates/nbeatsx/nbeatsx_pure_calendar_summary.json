@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-10-31T00:44:52+0300",
+  "total_runtime_sec": 83.78678409999702,
+  "selection_folds": [
+    4,
+    3,
+    2
+  ],
+  "control_baseline_unclipped": 0.761313938112696,
+  "variants": {
+    "Standalone_NBEATSx_PureCal": {
+      "mean_unclipped": 0.8549675101181066,
+      "delta_vs_control": 0.09365357200541058,
+      "mean_score": 0.7712455386644791
+    },
+    "Blend_0.90E_0.10NBEATSx_PureCal": {
+      "mean_unclipped": 0.7607962824318294,
+      "delta_vs_control": -0.0005176556808665911,
+      "mean_score": 0.7337217379322571
+    },
+    "Blend_0.75E_0.25NBEATSx_PureCal": {
+      "mean_unclipped": 0.763875030437561,
+      "delta_vs_control": 0.002561092324865011,
+      "mean_score": 0.735063823853748
+    }
+  },
+  "beats_control": true,
+  "conclusion": "ACCEPTED"
+}

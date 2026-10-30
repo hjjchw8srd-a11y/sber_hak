@@ -53,11 +53,15 @@ class APIValidationError(HTTPException):
         super().__init__(status_code=status_code, detail={"detail": detail, "code": code})
 
 
-def validate_and_load_sales(content: bytes | str | pd.DataFrame) -> pd.DataFrame:
+def validate_and_load_sales(content: bytes | str | pd.DataFrame | Path) -> pd.DataFrame:
     if isinstance(content, pd.DataFrame):
         df = content.copy()
     else:
-        if isinstance(content, bytes):
+        if isinstance(content, Path) or (isinstance(content, str) and "\n" not in content and Path(content).exists() and Path(content).is_file()):
+            text = Path(content).read_text(encoding="utf-8", errors="replace")
+            if len(text.strip()) == 0:
+                raise APIValidationError(400, "Empty sales CSV file", code="BAD_REQUEST")
+        elif isinstance(content, bytes):
             if len(content) == 0:
                 raise APIValidationError(400, "Empty sales CSV file", code="BAD_REQUEST")
             text = content.decode("utf-8", errors="replace")
@@ -155,11 +159,15 @@ def validate_and_load_sales(content: bytes | str | pd.DataFrame) -> pd.DataFrame
     return df
 
 
-def validate_and_load_stock(content: bytes | str | pd.DataFrame, cutoff_date: pd.Timestamp | None = None) -> pd.DataFrame:
+def validate_and_load_stock(content: bytes | str | pd.DataFrame | Path, cutoff_date: pd.Timestamp | None = None) -> pd.DataFrame:
     if isinstance(content, pd.DataFrame):
         df = content.copy()
     else:
-        if isinstance(content, bytes):
+        if isinstance(content, Path) or (isinstance(content, str) and "\n" not in content and Path(content).exists() and Path(content).is_file()):
+            text = Path(content).read_text(encoding="utf-8", errors="replace")
+            if len(text.strip()) == 0:
+                raise APIValidationError(400, "Empty stock CSV file", code="BAD_REQUEST")
+        elif isinstance(content, bytes):
             if len(content) == 0:
                 raise APIValidationError(400, "Empty stock CSV file", code="BAD_REQUEST")
             text = content.decode("utf-8", errors="replace")

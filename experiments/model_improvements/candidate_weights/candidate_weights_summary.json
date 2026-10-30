@@ -1,0 +1,63 @@
+{
+  "timestamp": "2026-10-31T00:21:01+0300",
+  "total_runtime_sec": 118.5937636000017,
+  "seeds": [
+    42,
+    52,
+    62
+  ],
+  "by_seed": {
+    "42": {
+      "selection_unclipped_ctrl": 0.761313938112696,
+      "selection_unclipped_cand": 0.7601545006473941,
+      "selection_unclipped_delta": -0.0011594374653018935,
+      "check_unclipped_ctrl": 0.7485362579007863,
+      "check_unclipped_cand": 0.7472939235246554,
+      "check_unclipped_delta": -0.0012423343761308603,
+      "all_clipped_ctrl": 0.7309877787501999,
+      "all_clipped_cand": 0.7300749566925789,
+      "all_clipped_delta": -0.0009128220576209989,
+      "all_unclipped_ctrl": 0.7562028660279321,
+      "all_unclipped_cand": 0.7550102697982986,
+      "all_unclipped_delta": -0.0011925962296335246
+    },
+    "52": {
+      "selection_unclipped_ctrl": 0.7619823751803446,
+      "selection_unclipped_cand": 0.76098673866165,
+      "selection_unclipped_delta": -0.0009956365186946092,
+      "check_unclipped_ctrl": 0.7498602095739791,
+      "check_unclipped_cand": 0.7483547400838872,
+      "check_unclipped_delta": -0.001505469490091893,
+      "all_clipped_ctrl": 0.7313726969846784,
+      "all_clipped_cand": 0.7306528237829728,
+      "all_clipped_delta": -0.0007198732017056342,
+      "all_unclipped_ctrl": 0.7571335089377984,
+      "all_unclipped_cand": 0.7559339392305449,
+      "all_unclipped_delta": -0.001199569707253545
+    },
+    "62": {
+      "selection_unclipped_ctrl": 0.7622784873667539,
+      "selection_unclipped_cand": 0.7617015250987186,
+      "selection_unclipped_delta": -0.0005769622680352748,
+      "check_unclipped_ctrl": 0.7507400280290069,
+      "check_unclipped_cand": 0.7496696164290886,
+      "check_unclipped_delta": -0.001070411599918275,
+      "all_clipped_ctrl": 0.7313411473302724,
+      "all_clipped_cand": 0.7309159692800027,
+      "all_clipped_delta": -0.00042517805026975886,
+      "all_unclipped_ctrl": 0.757663103631655,
+      "all_unclipped_cand": 0.7568887616308665,
+      "all_unclipped_delta": -0.0007743420007885193
+    }
+  },
+  "overall": {
+    "selection_delta_mean": -0.0009106787506772592,
+    "selection_delta_std": 0.0002452654420793439,
+    "check_delta_mean": -0.0012727384887136761,
+    "check_delta_std": 0.00017890807601864776,
+    "all_clipped_delta_mean": -0.000685957769865464,
+    "all_clipped_delta_std": 0.0002005190961214966,
+    "all_unclipped_delta_mean": -0.001055502645891863,
+    "all_unclipped_delta_std": 0.0001988309811770213
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "protocol_version": "1.0.0",
+  "created_at": "2026-10-30T23:40:00+03:00",
+  "git_commit_base": "df377f10103fc59114bc8c77cec54cc5119c0a0c",
+  "git_branch": "codex/model_improvements",
+  "seed": 42,
+  "libraries": {
+    "python": "3.11.9",
+    "torch": "2.9.1+cu128",
+    "lightgbm": "4.7.0",
+    "catboost": "1.2.10",
+    "neuralforecast": "3.3.0",
+    "scipy": "1.17.1",
+    "numpy": "2.4.6",
+    "pandas": "3.0.5"
+  },
+  "input_hashes_sha256": {
+    "sales_dataset_hakaton_train.csv": "34fe562dc1e0742aac1387d71ae20711e2f533fb56bbf34ce6363318e59a8e6b",
+    "stock_dataset_hakaton_train.csv": "d744cac7f82fb14ec42e12818f6257c07392ea315f050355d357d3865ec8b166",
+    "blend_b_fold_0.csv.gz": "3d945c95b41e5524c7f75610655d063e9aa5a3d0bc9d79c59a14ec029a24375d",
+    "blend_b_fold_1.csv.gz": "ee2e648ce3e984f57d21248f2941fbeb5411708a5e51c28f8ad7ea10d1f1db33",
+    "blend_b_fold_2.csv.gz": "01b89957feb94b97145a558ee2a9c79f96a2f46e2c679d181df46873f90fb111",
+    "blend_b_fold_3.csv.gz": "e501ec367e75617790510692959fab27697d3440834972d02a426bfe869a66f9",
+    "blend_b_fold_4.csv.gz": "75946cff31148260b22632d9b70cb72efb0237c9fdf622afe08d6e5d248c9404",
+    "fold_0_meta.csv.gz": "fc97bcc7a56d2a61c84cfdc95861de54faffaa6095bb87ea17b24b04cc82d255",
+    "fold_1_meta.csv.gz": "0fc7c258604340ed2fd2bc91c06c4795d59aa3b46fb916b7e98ebeb9a3bcf929",
+    "fold_2_meta.csv.gz": "049c254520cdcd135a42d773d451ffdc02d89c2c99201820b7ce34d7b3e1de6e",
+    "fold_3_meta.csv.gz": "308e6d1e5f04ec7ed991e8e19351e1590a3317a1aad89e2d5ccfae51f5d10507",
+    "fold_4_meta.csv.gz": "04ef64d1907b9df4377c8d9fff1cb3e4b49a0608e0eae711fb0265bd1ed5750f"
+  },
+  "folds": {
+    "selection_folds": [4, 3, 2],
+    "subsequent_check_folds": [1, 0],
+    "definitions": {
+      "4": {
+        "cutoff_date": "2025-09-14",
+        "first_val_week": "2025-09-15",
+        "last_val_week": "2025-11-10",
+        "origin": 89,
+        "role": "selection"
+      },
+      "3": {
+        "cutoff_date": "2025-11-16",
+        "first_val_week": "2025-11-17",
+        "last_val_week": "2026-01-12",
+        "origin": 98,
+        "role": "selection"
+      },
+      "2": {
+        "cutoff_date": "2026-01-18",
+        "first_val_week": "2026-01-19",
+        "last_val_week": "2026-03-16",
+        "origin": 107,
+        "role": "selection"
+      },
+      "1": {
+        "cutoff_date": "2026-03-22",
+        "first_val_week": "2026-03-23",
+        "last_val_week": "2026-05-18",
+        "origin": 116,
+        "role": "subsequent_historical_check"
+      },
+      "0": {
+        "cutoff_date": "2026-05-24",
+        "first_val_week": "2026-05-25",
+        "last_val_week": "2026-07-20",
+        "origin": 125,
+        "role": "subsequent_historical_check"
+      }
+    }
+  },
+  "primary_selection_criterion": "mean_unclipped_ratio_folds_4_3_2",
+  "control_benchmark": {
+    "name": "Blend_LightGBM_B",
+    "history_origins": 52,
+    "archived_5fold_clipped_score": 0.7309877788,
+    "archived_5fold_unclipped_ratio": 0.7562028660,
+    "archived_selection_folds_unclipped_ratio": 0.7613139381,
+    "archived_selection_folds_clipped_score": 0.7345392853,
+    "archived_check_folds_unclipped_ratio": 0.7485362579,
+    "archived_check_folds_clipped_score": 0.7256605190
+  },
+  "postprocessing_formula": "P(x) = np.maximum(np.rint(np.where(1.05 * np.maximum(x, 0.0) < 0.65, 0.0, 1.05 * np.maximum(x, 0.0))), 0.0)",
+  "blending_rules": {
+    "control": "P(E_raw)",
+    "single_tft": "P(T_raw)",
+    "single_candidate": "P(C_raw)",
+    "ensemble_blend_10": "P(0.90 * E_raw + 0.10 * C_raw)",
+    "ensemble_blend_25": "P(0.75 * E_raw + 0.25 * C_raw)",
+    "tft_blend_10": "P(0.90 * T_raw + 0.10 * C_raw)",
+    "tft_blend_25": "P(0.75 * T_raw + 0.25 * C_raw)",
+    "holiday_ensemble_rule": "E_holidays_raw = E_raw + 0.30 * (L_holidays - L_control); final = P(E_holidays_raw)"
+  },
+  "candidate_chronos": {
+    "model_id": "amazon/chronos-2",
+    "revision": "29ec3766d36d6f73f0696f85560a422f50e8498c",
+    "mode": "zero-shot",
+    "context_lengths_tested": [52, 104]
+  }
+}

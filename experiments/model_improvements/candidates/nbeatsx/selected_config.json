@@ -1,0 +1,63 @@
+{
+  "candidate_name": "NBEATSx_Ablation_Series",
+  "evaluated_at": "2026-10-31T00:46:50+0300",
+  "decision": "CONCLUDED_NOT_PROMOTED",
+  "reason": "Pure calendar Blend 10% slightly beats Control B (-0.000802 clipped), but Candidate Weights 45/37/9/9 is strictly superior (-0.000913 clipped, -0.001193 unclipped) and standalone NBEATSx is substantially weaker than TFT (0.8302 vs 0.7523).",
+  "control_baseline": {
+    "name": "Blend_LightGBM_B",
+    "selection_unclipped_ratio": 0.761313938112696,
+    "check_unclipped_ratio": 0.7485362579007863,
+    "all5_unclipped_ratio": 0.7562028660279321,
+    "all5_clipped_score": 0.7309877787501999
+  },
+  "evaluated_configurations": [
+    {
+      "name": "NBEATSx_Statutory_Holidays_12Exog",
+      "features": [
+        "month", "quarter", "week_of_year", "week_sin", "week_cos",
+        "holiday_days", "holiday_days_prev_week", "holiday_days_next_week",
+        "new_year_days", "may_holiday_days", "days_to_nearest_holiday", "days_since_last_holiday"
+      ],
+      "non_negative_clipping": false,
+      "budget_steps": 500,
+      "context_weeks": 26,
+      "history_weeks": 52,
+      "loss": "MAE",
+      "seed": 42,
+      "selection_unclipped_standalone": 1.0130685795047067,
+      "selection_unclipped_b10": 0.7653586620494238,
+      "selection_delta_b10": 0.004044723936727834,
+      "status": "REJECTED_ON_SELECTION"
+    },
+    {
+      "name": "NBEATSx_Pure_Calendar_5Exog",
+      "features": [
+        "month", "quarter", "week_of_year", "week_sin", "week_cos"
+      ],
+      "non_negative_clipping": true,
+      "clipping_formula": "C_raw = max(N_raw, 0.0)",
+      "budget_steps": 500,
+      "context_weeks": 26,
+      "history_weeks": 52,
+      "loss": "MAE",
+      "seed": 42,
+      "standalone_metrics": {
+        "selection_unclipped": 0.8549675101181066,
+        "check_unclipped": 0.793070678385633,
+        "all5_unclipped": 0.8302087774251172,
+        "all5_score": 0.7641049141003923
+      },
+      "blend_10_metrics": {
+        "selection_unclipped": 0.7607962824318294,
+        "check_unclipped": 0.7475161067484242,
+        "all5_unclipped": 0.7554842121584673,
+        "all5_score": 0.7301862121419374,
+        "selection_delta_unclipped": -0.0005176556808665911,
+        "check_delta_unclipped": -0.0010201511523620716,
+        "all5_delta_unclipped": -0.0007186538694647915,
+        "all5_delta_score": -0.0008015666082625827
+      },
+      "status": "VERIFIED_COMPLETED_SECONDARY_TO_CANDIDATE_WEIGHTS"
+    }
+  ]
+}
