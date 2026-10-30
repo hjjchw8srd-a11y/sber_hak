@@ -1,0 +1,32 @@
+{
+  "submission_file": "candidate_stock_lgbm_reconciled.csv",
+  "sha256": "3bf71a6ecabe399e032cc7fa4be4271b3439c4953281914aab25c5d36c49b9ad",
+  "rows": 79101,
+  "total_volume": 212625.0,
+  "non_zero_rows": 34654,
+  "non_zero_rate": 0.4380981277101427,
+  "weights": {
+    "tft": 0.45,
+    "stock_lgbm_52": 0.37,
+    "catboost_18": 0.09,
+    "per_category": 0.09
+  },
+  "stock_features": [
+    "stock_end_lag_1",
+    "stock_mean_lag_1",
+    "stock_nonpositive_rate_lag_1",
+    "weeks_of_supply",
+    "unconstrained_demand_13"
+  ],
+  "series_reconciliation": {
+    "tau": 2.0,
+    "min_hist_nonzero": 0.2,
+    "min_hist_mean": 0.1
+  },
+  "postprocessing": {
+    "alpha": 1.05,
+    "threshold": 0.65,
+    "rounding": "rint",
+    "clip_lower": 0.0
+  }
+}

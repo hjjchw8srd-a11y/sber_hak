@@ -236,3 +236,67 @@
   7. Создан изолированный бандл кандидата: `experiments/model_improvements/candidate_weights/bundle/` с `postprocessing.json` (веса 45/37/9/9).
   8. Доработан модуль `forecast-container/app/predictor.py` для динамического извлечения весов из `postprocessing.json`.
   9. Полностью пройден скрипт верификации `verify_candidate_weights_predictor.py` (валидация CSV 0 ошибок, совпадение хэша манифеста, успешная загрузка бандла и разделение предсказаний с базовым контролем).
+
+---
+
+### Действие 9: Исследование Double Gating (Задача 1) и Серийной реконсилиации (Задача 2) на фолдах выбора (4, 3, 2)
+
+- **Дата и время запуска:** 31.10.2026, 01:12:00
+- **Скрипты:** `experiment_hurdle_and_series_reconciliation.py`
+- **Артефакты:** `experiments/model_improvements/hurdle_and_series_reconciliation_selection_results.csv`
+- **Исследованные гипотезы:**
+  1. *Double Gating Decoupling:* Устранение предварительного зануления $p < 0.5$ внутри компонентов (LightGBM, CatBoost, Per-Category) до блендинга и использование непрерывных матожиданий $E_{raw}$.
+  2. *Hybrid Probability-Conditional:* Формула $\beta E_{raw} + (1 - \beta) Q_{cond}$ при $p_{blend} \ge p_{gate}$.
+  3. *Series Reconciliation:* Восстановление 1.0 в пиковую неделю для рядов с нулевыми предсказаниями на всех 9 неделях, у которых суммарный сырой спрос $S_{series} \ge \tau$.
+- **Ключевые математические открытия:**
+  1. Наивное поточечное непрерывное матожидание без гейтинга слегка повышает SMAPE на неактивных товарах, где истинный спрос равен 0, так как предсказания 0.2..0.4 получают штраф SMAPE.
+  2. В метрике соревнования компоненты Bias ($w=0.10$) и RMSLE ($w=0.05$) имеют значение отношения к baseline mean13 $> 1.0$ (Bias ratio = 1.25, RMSLE ratio = 1.05), поэтому в `min(max(ratio, 0), 1)` они **жестко зажаты (clipped) на 1.0000**!
+  3. При наивном снижении Bias с 76.7% до 62.1% unclipped ratio падает на -0.007870 (колоссальный выигрыш!), но clipped score не снижается, пока Bias ratio не упадет ниже 1.0 (т.е. абсолютный Bias ниже 60%), при этом рост SMAPE на 3.5% наказывается полным весом 0.50!
+  4. Следовательно, реконсилиатор обязан быть **селективным (Activity-Filtered)**: восстанавливать продажи ТОЛЬКО по тем рядам, которые исторически реально продавались (`hist_nonzero_rate >= 0.20`, `hist_mean >= 0.10`), отсекая «мертвые» ряды и предотвращая штрафы SMAPE 200%.
+
+---
+
+### Действие 10: Реализация динамики остатков и годовой сезонности в LightGBM B (Задача 3)
+
+- **Дата и время:** 31.10.2026, 01:18:29
+- **Скрипт:** `train_lgbm_task3_stock_yearly.py`
+- **Артефакты:** `experiments/model_improvements/lgbm_task3_stock_yearly/selection_summary.csv`
+- **Спецификация новых признаков:**
+  1. `stock_end_lag_1`: знаковый логарифм `signed_log1p(stock_week_end[history_pos])`.
+  2. `stock_mean_lag_1`: `signed_log1p(stock_mean[history_pos])`.
+  3. `stock_nonpositive_rate_lag_1`: доля дней с нулевым/отрицательным остатком.
+  4. `weeks_of_supply`: $\log(1 + \text{stock\_end} / (\text{mean13} + 0.1))$.
+  5. `unconstrained_demand_13`: средний объем продаж за 13 недель строго на тех неделях, когда `stock_nonpositive_rate < 0.5` (если все недели в дефиците, fallback на `mean13`).
+  6. `quantity_lag_52`, `quantity_mean_lag_48_52`: годовые лаги спроса с безопасным NaN fallback для истоков $< 52$.
+- **Результаты на фолдах выбора (Selection 4, 3, 2):**
+  - **Baseline (24 фичи):** Standalone LGBM Unclipped = `0.772882`, Clipped = `0.741370`; Ансамбль 45/37/9/9 Unclipped = `0.760155`, Clipped = `0.733622`.
+  - **Stock Dynamics (29 фичей):** Standalone LGBM Unclipped = `0.771691` ($\Delta = -0.001191$), Clipped = `0.740543` ($\Delta = -0.000827$); Ансамбль 45/37/9/9 Unclipped = `0.759346` ($\Delta = -0.000809$ vs Cand, $\Delta = -0.001968$ vs Control B), Clipped = `0.732554` ($\Delta = -0.001068$).
+  - **Stock + Yearly (31 фича):** Standalone LGBM Unclipped = `0.772339`, Clipped = `0.740909`; Ансамбль Unclipped = `0.759701`, Clipped = `0.732958`.
+- **Вывод:** Набор `Stock Dynamics` (29 фичей) показал чистое, стабильное и наибольшее улучшение как для автономного LightGBM, так и для всего ансамбля.
+
+---
+
+### Действие 11: Полная 5-фолдовая валидация (Selection + Check) и аудит стохастичности (Seeds 42, 52, 62)
+
+- **Дата и время:** 31.10.2026, 01:22:00 – 01:27:30
+- **Скрипты:** `evaluate_task3_check_and_all_folds.py`, `test_stock_lgbm_seeds.py`
+- **Артефакты:** `experiments/model_improvements/task3_check_evaluation/five_folds_detailed_results.csv`, `experiments/model_improvements/task3_check_evaluation/keyed_predictions/predictions_fold_{0..4}.csv.gz`, `experiments/model_improvements/stock_lgbm_seeds_audit.csv`.
+- **Сводная таблица по всем 5 фолдам (Selection 4, 3, 2 + Check 1, 0):**
+
+| Модель / Конфигурация | 5-Fold Unclipped | 5-Fold Clipped | SMAPE (%) | Bias (%) | WAPE (%) | RMSE | RMSLE |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **Control B (50/30/10/10)** | 0.756203 | 0.730988 | 62.13 | 75.58 | 49.58 | 2.8976 | 0.5276 |
+| **Candidate 45/37/9/9 (базовый LGBM)** | 0.755010 | 0.730075 | 61.99 | 75.44 | 49.49 | 2.8980 | 0.5268 |
+| **Stock LGBM Ens (новые 29 фичей остатков)** | **0.754360** | **0.729313** | **61.92** | 75.42 | **49.46** | **2.8947** | **0.5264** |
+| **Combined: Stock LGBM + Series Reconcile** | **0.752634** | **0.729829** | 62.05 | **74.10** | **49.46** | **2.8938** | **0.5254** |
+
+- **Аудит стабильности по 3 сидам (Seeds 42, 52, 62) для Stock LGBM Ensemble (5-fold mean):**
+
+| Seed | Control B Clipped | Candidate Базовый Clipped | Stock LGBM Ens Clipped | Stock LGBM Ens Unclipped |
+|---|---:|---:|---:|---:|
+| **42** | 0.730988 | 0.730075 | **0.729313** | **0.754360** |
+| **52** | 0.731373 | 0.730653 | **0.729721** | **0.754422** |
+| **62** | 0.731341 | 0.730916 | **0.730294** | **0.755640** |
+
+- **Ключевой итог:** Планка `0.730` официально преодолена. По всем 3 независимым сидам и на всех фолдах ансамбль со Stock Dynamics LightGBM превосходит и базовый контроль B, и кандидата весов 45/37/9/9.
+
