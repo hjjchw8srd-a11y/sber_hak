@@ -1,0 +1,62 @@
+{
+  "candidate_name": "champion_unclipped_rank",
+  "description": "All-Stock 29-feature Ensemble + Activity-Conditioned Reconciler. Best Unclipped Ratio (0.752658), lowest Naive Last score (0.778697), lowest Bias (74.30%), and lowest RMSE (2.8868).",
+  "created_at": "2026-10-31 12:18:05",
+  "destination_file": "champion_unclipped_rank.csv",
+  "sha256": "d24ad8faa44a728b5fe7217c5855aae4fab43252e4cc8bb4e812d8e6612e7b4f",
+  "rows": 79101,
+  "total_volume": 216290.0,
+  "non_zero_rows": 34835,
+  "non_zero_rate": 0.4403863415127495,
+  "weights": {
+    "tft": 0.45,
+    "lightgbm_b": 0.37,
+    "catboost": 0.09,
+    "per_category": 0.09
+  },
+  "features_count": 28,
+  "feature_columns": [
+    "warehouse_name",
+    "article",
+    "category_lvl_2",
+    "category_lvl_3",
+    "horizon",
+    "time_idx",
+    "quantity_lag_1",
+    "quantity_lag_2",
+    "quantity_lag_4",
+    "quantity_lag_13",
+    "quantity_mean_4",
+    "quantity_mean_13",
+    "quantity_std_13",
+    "quantity_nonzero_rate_13",
+    "month",
+    "quarter",
+    "week_of_year",
+    "week_sin",
+    "week_cos",
+    "article_network_sales_mean_13_log",
+    "article_network_growth_4_vs_13",
+    "warehouse_share_article_13",
+    "active_warehouses_article_13",
+    "stock_end_lag_1",
+    "stock_mean_lag_1",
+    "stock_nonpositive_rate_lag_1",
+    "unconstrained_demand_13",
+    "weeks_of_supply"
+  ],
+  "series_reconciliation": {
+    "tau": 2.0,
+    "min_hist_nonzero": 0.2,
+    "min_hist_mean": 0.1
+  },
+  "cv_performance_5_folds": {
+    "clipped_score_mean13": 0.729715,
+    "unclipped_ratio_mean13": 0.752658,
+    "score_naive_last": 0.778697,
+    "smape": 62.042,
+    "bias": 74.301,
+    "wape": 49.468,
+    "rmse": 2.8868
+  }
+}

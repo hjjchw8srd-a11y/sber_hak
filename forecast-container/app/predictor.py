@@ -84,7 +84,7 @@ class Predictor:
         tft_model: NeuralForecast,
         lgbm_clf: lgb.Booster,
         lgbm_reg: lgb.Booster,
-        cb_clf: CatBoostClassifier,
+        cb_clf: Optional[CatBoostClassifier],
         cb_reg: CatBoostRegressor,
         cat_meta: dict[str, Any],
         cat_boosters: dict[str, Tuple[lgb.Booster, lgb.Booster]],
@@ -126,10 +126,13 @@ class Predictor:
         lgbm_reg = lgb.Booster(model_str=(bundle_path / "lgbm_b" / "reg.txt").read_text(encoding="utf-8"))
 
         # Load CatBoost models
-        cb_clf = CatBoostClassifier()
-        cb_clf.load_model(str(bundle_path / "catboost" / "clf.cbm"))
         cb_reg = CatBoostRegressor()
         cb_reg.load_model(str(bundle_path / "catboost" / "reg.cbm"))
+        cb_clf_path = bundle_path / "catboost" / "clf.cbm"
+        cb_clf = None
+        if cb_clf_path.exists():
+            cb_clf = CatBoostClassifier()
+            cb_clf.load_model(str(cb_clf_path))
 
         # Load Per-Category models
         with open(bundle_path / "per_category" / "meta.json", "r", encoding="utf-8") as f:
@@ -381,6 +384,19 @@ class Predictor:
         frame["stock_observed_days_lag_1"] = stock_observed_days_mat[history_pos, pair_idx]
         frame["stock_missing_lag_1"] = np.isnan(stock_end).astype(np.int8)
 
+        # Extended stock features (29 features set)
+        raw_val_stock = np.maximum(stock_end, 0.0)
+        val_mean13 = frame["quantity_mean_13"].to_numpy()
+        frame["weeks_of_supply"] = np.log1p(raw_val_stock / (val_mean13 + 0.1))
+
+        Q13 = quantity_mat[origin_pos - 13 : origin_pos, :]
+        SNR13 = stock_nonpositive_rate_mat[origin_pos - 13 : origin_pos, :]
+        valid = SNR13 < 0.5
+        count = valid.sum(axis=0)
+        q_sum = (Q13 * valid).sum(axis=0)
+        unconstrained = np.where(count > 0, q_sum / np.maximum(count, 1), Q13.mean(axis=0))
+        frame["unconstrained_demand_13"] = np.log1p(np.maximum(unconstrained[pair_idx], 0.0))
+
         frame["month"] = target_weeks.month.astype(np.int8)
         frame["quarter"] = target_weeks.quarter.astype(np.int8)
         frame["week_of_year"] = week_number
@@ -565,11 +581,14 @@ class Predictor:
         gated_lgb = np.where(p_lgb < 0.5, 0.0, exp_lgb)
 
         # 3. CatBoost prediction
-        p_cb = self.cb_clf.predict_proba(test_df[self.feature_cols])[:, 1]
-        q_cond_cb = np.maximum(np.expm1(self.cb_reg.predict(test_df[self.feature_cols])), 0.0)
-        cb_pred = p_cb * q_cond_cb
-        cb_pred[p_cb < 0.5] = 0.0
-        cb_pred = np.maximum(cb_pred, 0.0)
+        if self.cb_clf is not None:
+            p_cb = self.cb_clf.predict_proba(test_df[self.feature_cols])[:, 1]
+            q_cond_cb = np.maximum(np.expm1(self.cb_reg.predict(test_df[self.feature_cols])), 0.0)
+            cb_pred = p_cb * q_cond_cb
+            cb_pred[p_cb < 0.5] = 0.0
+            cb_pred = np.maximum(cb_pred, 0.0)
+        else:
+            cb_pred = np.maximum(self.cb_reg.predict(test_df[self.feature_cols]), 0.0)
 
         # 4. Per-Category prediction
         pcat_preds = np.zeros(len(test_df), dtype=np.float32)
@@ -587,9 +606,12 @@ class Predictor:
                 c_pred[c_proba < 0.5] = 0.0
                 pcat_preds[val_mask] = c_pred
 
-        pcat_postprocessed = np.asarray(
-            apply_rule(pd.Series(pcat_preds), threshold=0.75, round_to_int=True), dtype=np.float64
-        )
+        if self.postprocessing.get("pcat_apply_rule", False):
+            pcat_postprocessed = np.asarray(
+                apply_rule(pd.Series(pcat_preds), threshold=0.75, round_to_int=True), dtype=np.float64
+            )
+        else:
+            pcat_postprocessed = pcat_preds.astype(np.float64)
 
         # Grid keys for boosting
         test_weeks_arr = np.repeat(future_mondays.strftime("%Y-%m-%d").to_numpy(), len(self.valid_pairs))
@@ -613,10 +635,10 @@ class Predictor:
         )
 
         components_cfg = self.postprocessing.get("components", {})
-        w_tft = float(components_cfg.get("tft", {}).get("weight", 0.50))
-        w_lgb = float(components_cfg.get("lightgbm_b", {}).get("weight", 0.30))
-        w_cb = float(components_cfg.get("catboost", {}).get("weight", 0.10))
-        w_pcat = float(components_cfg.get("per_category", {}).get("weight", 0.10))
+        w_tft = float(components_cfg.get("tft", {}).get("weight", 0.45))
+        w_lgb = float(components_cfg.get("lightgbm_b", {}).get("weight", 0.37))
+        w_cb = float(components_cfg.get("catboost", {}).get("weight", 0.09))
+        w_pcat = float(components_cfg.get("per_category", {}).get("weight", 0.09))
 
         # Blend
         raw_blend = (
@@ -627,11 +649,52 @@ class Predictor:
         )
 
         blend_cfg = self.postprocessing.get("blend", {})
-        alpha = blend_cfg.get("alpha", 1.05)
-        threshold = blend_cfg.get("threshold", 0.65)
+        alpha = float(blend_cfg.get("alpha", 1.05))
+        threshold = float(blend_cfg.get("threshold", 0.65))
         scaled_blend = raw_blend * alpha
         gated_blend = np.where(scaled_blend < threshold, 0.0, scaled_blend)
         final_quantity = np.rint(gated_blend).clip(0, None).astype(int)
+
+        # Optional Activity-Conditioned Series Reconciler
+        recon_cfg = self.postprocessing.get("series_reconciliation", {})
+        if recon_cfg.get("enabled", False):
+            tau = float(recon_cfg.get("tau", 2.0))
+            min_nz = float(recon_cfg.get("min_hist_nonzero", 0.20))
+            min_m = float(recon_cfg.get("min_hist_mean", 0.10))
+
+            hist_13 = extended_data[extended_data["week"] < future_mondays[0]].copy()
+            recent_mondays = sorted(hist_13["week"].unique())[-13:]
+            hist_13 = hist_13[hist_13["week"].isin(recent_mondays)]
+            hist_stats = hist_13.groupby(["warehouse_name", "article"], observed=True)["quantity"].agg(
+                hist_mean="mean",
+                hist_nonzero=lambda s: (s > 0).mean()
+            ).reset_index()
+
+            merged_rec = merged.merge(hist_stats, on=["warehouse_name", "article"], how="left")
+            merged_rec["hist_mean"] = merged_rec["hist_mean"].fillna(0.0)
+            merged_rec["hist_nonzero"] = merged_rec["hist_nonzero"].fillna(0.0)
+            merged_rec["series_id"] = merged_rec["warehouse_name"].astype(str) + "__" + merged_rec["article"].astype(str)
+            merged_rec["pred_base"] = final_quantity
+            merged_rec["raw_blend"] = raw_blend
+
+            series_stats = merged_rec.groupby("series_id", observed=True).agg(
+                base_sum=("pred_base", "sum"),
+                raw_sum=("raw_blend", "sum"),
+                hist_mean=("hist_mean", "first"),
+                hist_nonzero=("hist_nonzero", "first"),
+            ).reset_index()
+
+            series_stats["needs_rescue"] = (
+                (series_stats["base_sum"] == 0)
+                & (series_stats["raw_sum"] >= tau)
+                & (series_stats["hist_nonzero"] >= min_nz)
+                & (series_stats["hist_mean"] >= min_m)
+            )
+            rescue_ids = set(series_stats.loc[series_stats["needs_rescue"], "series_id"])
+            if rescue_ids:
+                is_rescued = merged_rec["series_id"].isin(rescue_ids).to_numpy()
+                rescued_vals = np.rint(merged_rec["raw_blend"].to_numpy()).clip(0, None).astype(int)
+                final_quantity = np.where(is_rescued, rescued_vals, final_quantity)
 
         merged["quantity"] = final_quantity
         result = merged[KEYS + ["quantity"]].sort_values(KEYS).reset_index(drop=True)

@@ -7,6 +7,22 @@
     "clf_file": "category_lvl_1_1_clf.txt",
     "reg_file": "category_lvl_1_1_reg.txt"
   },
+  "category_lvl_1_5": {
+    "clf_file": "category_lvl_1_5_clf.txt",
+    "reg_file": "category_lvl_1_5_reg.txt"
+  },
+  "category_lvl_1_7": {
+    "clf_file": "category_lvl_1_7_clf.txt",
+    "reg_file": "category_lvl_1_7_reg.txt"
+  },
+  "category_lvl_1_4": {
+    "clf_file": "category_lvl_1_4_clf.txt",
+    "reg_file": "category_lvl_1_4_reg.txt"
+  },
+  "category_lvl_1_6": {
+    "clf_file": "category_lvl_1_6_clf.txt",
+    "reg_file": "category_lvl_1_6_reg.txt"
+  },
   "category_lvl_1_10": {
     "clf_file": "category_lvl_1_10_clf.txt",
     "reg_file": "category_lvl_1_10_reg.txt"
@@ -15,38 +31,6 @@
     "clf_file": "category_lvl_1_11_clf.txt",
     "reg_file": "category_lvl_1_11_reg.txt"
   },
-  "category_lvl_1_12": {
-    "clf_file": "category_lvl_1_12_clf.txt",
-    "reg_file": "category_lvl_1_12_reg.txt"
-  },
-  "category_lvl_1_13": {
-    "clf_file": "category_lvl_1_13_clf.txt",
-    "reg_file": "category_lvl_1_13_reg.txt"
-  },
-  "category_lvl_1_2": {
-    "clf_file": "category_lvl_1_2_clf.txt",
-    "reg_file": "category_lvl_1_2_reg.txt"
-  },
-  "category_lvl_1_3": {
-    "clf_file": "category_lvl_1_3_clf.txt",
-    "reg_file": "category_lvl_1_3_reg.txt"
-  },
-  "category_lvl_1_4": {
-    "clf_file": "category_lvl_1_4_clf.txt",
-    "reg_file": "category_lvl_1_4_reg.txt"
-  },
-  "category_lvl_1_5": {
-    "clf_file": "category_lvl_1_5_clf.txt",
-    "reg_file": "category_lvl_1_5_reg.txt"
-  },
-  "category_lvl_1_6": {
-    "clf_file": "category_lvl_1_6_clf.txt",
-    "reg_file": "category_lvl_1_6_reg.txt"
-  },
-  "category_lvl_1_7": {
-    "clf_file": "category_lvl_1_7_clf.txt",
-    "reg_file": "category_lvl_1_7_reg.txt"
-  },
   "category_lvl_1_8": {
     "clf_file": "category_lvl_1_8_clf.txt",
     "reg_file": "category_lvl_1_8_reg.txt"
@@ -54,5 +38,21 @@
   "category_lvl_1_9": {
     "clf_file": "category_lvl_1_9_clf.txt",
     "reg_file": "category_lvl_1_9_reg.txt"
+  },
+  "category_lvl_1_3": {
+    "clf_file": "category_lvl_1_3_clf.txt",
+    "reg_file": "category_lvl_1_3_reg.txt"
+  },
+  "category_lvl_1_12": {
+    "clf_file": "category_lvl_1_12_clf.txt",
+    "reg_file": "category_lvl_1_12_reg.txt"
+  },
+  "category_lvl_1_2": {
+    "clf_file": "category_lvl_1_2_clf.txt",
+    "reg_file": "category_lvl_1_2_reg.txt"
+  },
+  "category_lvl_1_13": {
+    "clf_file": "category_lvl_1_13_clf.txt",
+    "reg_file": "category_lvl_1_13_reg.txt"
   }
 }

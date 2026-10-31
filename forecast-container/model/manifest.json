@@ -1,64 +1,10 @@
 {
-  "bundle_name": "candidate_lgbm52_bundle",
-  "created_at": "2026-10-30 16:09:36",
-  "training_cutoff_date": "2026-07-26",
-  "reference_candidate": {
-    "name": "candidate_lgbm52",
-    "destination_file": "submissions/candidate_lgbm52.csv",
-    "sha256": "d8ff734c962bc782987f750962e6110fb6204ed4cacc7874048d160bd7ad1f0f",
-    "row_count": 79101,
-    "total_quantity": 210453
-  },
-  "components": {
-    "tft": {
-      "framework": "NeuralForecast",
-      "model": "TFT",
-      "input_size": 26,
-      "horizon": 9,
-      "dataset_stripped": true
-    },
-    "lightgbm_b": {
-      "framework": "LightGBM",
-      "version": "4.7.0",
-      "origins": 52,
-      "origin_range": [
-        74,
-        125
-      ]
-    },
-    "catboost": {
-      "framework": "CatBoost",
-      "origins": 18,
-      "origin_range": [
-        108,
-        125
-      ]
-    },
-    "per_category": {
-      "framework": "LightGBM",
-      "num_categories": 14,
-      "categories": [
-        "category_lvl_1_0",
-        "category_lvl_1_1",
-        "category_lvl_1_10",
-        "category_lvl_1_11",
-        "category_lvl_1_12",
-        "category_lvl_1_13",
-        "category_lvl_1_2",
-        "category_lvl_1_3",
-        "category_lvl_1_4",
-        "category_lvl_1_5",
-        "category_lvl_1_6",
-        "category_lvl_1_7",
-        "category_lvl_1_8",
-        "category_lvl_1_9"
-      ]
-    }
-  },
+  "model_name": "champion_all_stock_ensemble",
+  "created_at": "2026-10-31 12:18:05",
+  "features_count": 28,
   "feature_columns": [
     "warehouse_name",
     "article",
-    "category_lvl_1",
     "category_lvl_2",
     "category_lvl_3",
     "horizon",
@@ -79,163 +25,34 @@
     "article_network_sales_mean_13_log",
     "article_network_growth_4_vs_13",
     "warehouse_share_article_13",
-    "active_warehouses_article_13"
+    "active_warehouses_article_13",
+    "stock_end_lag_1",
+    "stock_mean_lag_1",
+    "stock_nonpositive_rate_lag_1",
+    "unconstrained_demand_13",
+    "weeks_of_supply"
   ],
-  "categorical_columns": [
+  "cat_columns": [
     "warehouse_name",
     "article",
-    "category_lvl_1",
     "category_lvl_2",
     "category_lvl_3"
   ],
-  "files": {
-    "catboost/clf.cbm": {
-      "size_bytes": 417892,
-      "sha256": "2c87bdd405f80bf90827231eb7200abfca0b0ecf5c921cc3543c9e0e878ba78f"
+  "models": {
+    "tft": {
+      "type": "NeuralForecast"
     },
-    "catboost/reg.cbm": {
-      "size_bytes": 418048,
-      "sha256": "73173832f9bd648e248ada1b3883334f389f459963ec64216a4c6285ef9bbb52"
+    "lgbm_b": {
+      "type": "LightGBM",
+      "origins": 52
     },
-    "lgbm_b/clf.txt": {
-      "size_bytes": 875456,
-      "sha256": "632b85e28f1347b3fae011dba90a6d429543fb8671fd94e67dfeb86617f3590a"
+    "catboost": {
+      "type": "CatBoost",
+      "origins": 18
     },
-    "lgbm_b/reg.txt": {
-      "size_bytes": 751976,
-      "sha256": "12d59b6e7325eea2382a65aa1217fac53def0ece0fa6582236e51bba1cf34dd5"
-    },
-    "per_category/category_lvl_1_0_clf.txt": {
-      "size_bytes": 455612,
-      "sha256": "ce4710d164943d1f07f2e3282c229a8b903c730a00dbd939d9efde8145472e43"
-    },
-    "per_category/category_lvl_1_0_reg.txt": {
-      "size_bytes": 400403,
-      "sha256": "e6d6ec8cdaacdbfcb1f91a34019b39112d176462c80cba93ebe0e4b2014a942a"
-    },
-    "per_category/category_lvl_1_10_clf.txt": {
-      "size_bytes": 490939,
-      "sha256": "3d3ab1d92ced5251ca1b0e9e9459560079d6fcf803e88d158c1a37e4e49d756a"
-    },
-    "per_category/category_lvl_1_10_reg.txt": {
-      "size_bytes": 422698,
-      "sha256": "9ea3bbaf6ffde3b0ea0f6c9b790376559758ba52f154448a77ac056d1ccf57a7"
-    },
-    "per_category/category_lvl_1_11_clf.txt": {
-      "size_bytes": 433638,
-      "sha256": "21bab4ea2a9e51710c12fbb403fba9c71a00dac03ff7a9b4f6fa309e65d7856e"
-    },
-    "per_category/category_lvl_1_11_reg.txt": {
-      "size_bytes": 367293,
-      "sha256": "a0483af6013f2aefa8da3f4fdb778d15a7bc75cc1f2218e59fb262340ea411c2"
-    },
-    "per_category/category_lvl_1_12_clf.txt": {
-      "size_bytes": 351693,
-      "sha256": "5498ad2f689694b23fa8360dcf54470312bf1ac519e71128568064fc82982b70"
-    },
-    "per_category/category_lvl_1_12_reg.txt": {
-      "size_bytes": 69865,
-      "sha256": "45f8f830818d11982a7e297187cb16921e4a5b51001beac90d314ca668b83070"
-    },
-    "per_category/category_lvl_1_13_clf.txt": {
-      "size_bytes": 416204,
-      "sha256": "b47f76f2c092265e23dd802020d195ed33a0c8b2a4c210c8ad3b595020b31233"
-    },
-    "per_category/category_lvl_1_13_reg.txt": {
-      "size_bytes": 183890,
-      "sha256": "bddfbbb78f1d240d82654aa535d7cc5126addde81c045b9ea9021f226d94d494"
-    },
-    "per_category/category_lvl_1_1_clf.txt": {
-      "size_bytes": 494832,
-      "sha256": "1c9b273d684211892a1d9cb0b0a2f52c356e90fee1a8f0d58b24c5c3ddf36252"
-    },
-    "per_category/category_lvl_1_1_reg.txt": {
-      "size_bytes": 417439,
-      "sha256": "40928da46701401b625a4a2af5146c30f2521b46132a1b0e5d2909e2470bdc11"
-    },
-    "per_category/category_lvl_1_2_clf.txt": {
-      "size_bytes": 418680,
-      "sha256": "814b4a0def5739a1e3cb6f408848b3dd9502dbac172029e4294cba618e4aed71"
-    },
-    "per_category/category_lvl_1_2_reg.txt": {
-      "size_bytes": 309204,
-      "sha256": "fe571d8f1a6446a035b356a525d5138ba7d50437edb5fd6d50749fc1c3fb1842"
-    },
-    "per_category/category_lvl_1_3_clf.txt": {
-      "size_bytes": 475005,
-      "sha256": "8af3fc62d8d4f000ce04b0e53ac596c65b672377aad8c8ca57d3c46f2717d26f"
-    },
-    "per_category/category_lvl_1_3_reg.txt": {
-      "size_bytes": 396763,
-      "sha256": "a3a49e88cb5dec252c7e33e62126ac82471b1e2bf8256bdded4eb197ce71880b"
-    },
-    "per_category/category_lvl_1_4_clf.txt": {
-      "size_bytes": 555279,
-      "sha256": "41c319392101dfdea078de10345e5ddfa5dceaf228582c545eb0c2932c1d3897"
-    },
-    "per_category/category_lvl_1_4_reg.txt": {
-      "size_bytes": 464831,
-      "sha256": "4171e0f8d192e1a4f0a7514a4d913e6b3e57b0f8201e9996d29f782a7144d158"
-    },
-    "per_category/category_lvl_1_5_clf.txt": {
-      "size_bytes": 645477,
-      "sha256": "69b399ca25a2a331c64481db6f29a36b1450a4e2cfaf789d1d23434ddb011e60"
-    },
-    "per_category/category_lvl_1_5_reg.txt": {
-      "size_bytes": 552955,
-      "sha256": "9d8f84e51b0c3721ea740bba8286710f19e7179c927987deec7d4f8131743a8a"
-    },
-    "per_category/category_lvl_1_6_clf.txt": {
-      "size_bytes": 456448,
-      "sha256": "7f1e7270ae659406080afb102e8814c55bea29b2ac906cee900b1bd3913f4c92"
-    },
-    "per_category/category_lvl_1_6_reg.txt": {
-      "size_bytes": 390317,
-      "sha256": "053b6dc0f987dcdc08c0c01547095b244bfa68bfc1a33f2c5aab44375f687d42"
-    },
-    "per_category/category_lvl_1_7_clf.txt": {
-      "size_bytes": 461235,
-      "sha256": "fb7d1c25436ed6e36cbcbfd6f7802e11ae91b258d2699593f01b11a4acb3434f"
-    },
-    "per_category/category_lvl_1_7_reg.txt": {
-      "size_bytes": 381910,
-      "sha256": "c02a8ca71a9d60af6c4651103f2bca1a132eb35c8000d53320c3644cc18907dd"
-    },
-    "per_category/category_lvl_1_8_clf.txt": {
-      "size_bytes": 449728,
-      "sha256": "cf34000365fddc606fd46ccbda1b9f3e8c95c3cb92c02bc4f7f65b94ed58e695"
-    },
-    "per_category/category_lvl_1_8_reg.txt": {
-      "size_bytes": 382707,
-      "sha256": "f0e20ee7299d42cf6b2e910ff2eaead4834435c90dbfb1f361ebf724629b232e"
-    },
-    "per_category/category_lvl_1_9_clf.txt": {
-      "size_bytes": 468743,
-      "sha256": "0269358df01462b8a847ef3b6a1fdc794ca9ad75f56137a386bec6d4ec314ef2"
-    },
-    "per_category/category_lvl_1_9_reg.txt": {
-      "size_bytes": 407505,
-      "sha256": "7694f3643d6507d39589165c2165425481af06c471e7cdf069ff2a3e098342ea"
-    },
-    "per_category/meta.json": {
-      "size_bytes": 1695,
-      "sha256": "dfe3366a93d92f144000f9bd51ab9fb3e0eb61b5a16c466aa9e75fcbcc796519"
-    },
-    "postprocessing.json": {
-      "size_bytes": 971,
-      "sha256": "224e42d832a0f33876f0c886a014d090164aa8e5e9a6ad6ee8fb4f45a188caee"
-    },
-    "tft/configuration.json": {
-      "size_bytes": 345,
-      "sha256": "d899d6f2dd4dccbcde343286ebd8c2c9811d4727916cb4fa26fb5fc31440c10b"
-    },
-    "tft/TFT_0.safetensors": {
-      "size_bytes": 3210332,
-      "sha256": "86cfd3a7c858435b1d850ccedafec3033caec073b0a6ef30cbbcc0a78dc21632"
-    },
-    "valid_pairs.parquet": {
-      "size_bytes": 21374,
-      "sha256": "1d28e3c5f6d214ee9953bd0e2082f4786b297322e574a144ba7e8c39bc19d996"
+    "per_category": {
+      "type": "PerCategory_LightGBM",
+      "categories": 14
     }
   }
 }

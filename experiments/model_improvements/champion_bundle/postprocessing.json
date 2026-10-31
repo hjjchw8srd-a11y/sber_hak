@@ -1,0 +1,28 @@
+{
+  "components": {
+    "tft": {
+      "weight": 0.45
+    },
+    "lightgbm_b": {
+      "weight": 0.37
+    },
+    "catboost": {
+      "weight": 0.09
+    },
+    "per_category": {
+      "weight": 0.09
+    }
+  },
+  "blend": {
+    "alpha": 1.05,
+    "threshold": 0.65,
+    "rounding": "rint",
+    "clip_lower": 0
+  },
+  "series_reconciliation": {
+    "enabled": false,
+    "tau": 2.0,
+    "min_hist_nonzero": 0.2,
+    "min_hist_mean": 0.1
+  }
+}

@@ -1,36 +1,28 @@
 {
   "components": {
     "tft": {
-      "weight": 0.5,
-      "type": "raw_continuous",
-      "description": "Temporal Fusion Transformer continuous prediction"
+      "weight": 0.45
     },
     "lightgbm_b": {
-      "weight": 0.3,
-      "type": "two_stage_hurdle",
-      "prob_gate": 0.5,
-      "description": "LightGBM B trained on 52 origins with prob_gate 0.5"
+      "weight": 0.37
     },
     "catboost": {
-      "weight": 0.1,
-      "type": "raw_two_stage",
-      "prob_gate": 0.5,
-      "description": "CatBoost trained on 18 origins, self-gated, treated as raw in blend"
+      "weight": 0.09
     },
     "per_category": {
-      "weight": 0.1,
-      "type": "category_hurdle_postprocessed",
-      "threshold": 0.75,
-      "rounding": "rint",
-      "description": "14 Category-level models with comp threshold 0.75 and rint"
+      "weight": 0.09
     }
   },
   "blend": {
     "alpha": 1.05,
     "threshold": 0.65,
     "rounding": "rint",
-    "clip_lower": 0.0
+    "clip_lower": 0
   },
-  "calendar_anchor": "2024-01-01",
-  "horizon_weeks": 9
+  "series_reconciliation": {
+    "enabled": false,
+    "tau": 2.0,
+    "min_hist_nonzero": 0.2,
+    "min_hist_mean": 0.1
+  }
 }
