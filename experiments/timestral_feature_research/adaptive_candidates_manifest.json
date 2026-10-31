@@ -1,0 +1,46 @@
+{
+  "submission_champion_timestral_adaptive_candidate.csv": {
+    "path": "submissions\\submission_champion_timestral_adaptive_candidate.csv",
+    "scheme_name": "Adaptive: Full Tuned Candidate",
+    "rule_description": "Full Tuned: Zero 0.00, Low 0.00, Mid 0.10/0.07, High 0.15/0.12",
+    "cv_metrics": {
+      "selection_unclipped": 0.756155,
+      "selection_clipped": 0.73032,
+      "check_unclipped": 0.746984,
+      "check_clipped": 0.724785,
+      "full_5f_unclipped": 0.752486,
+      "full_5f_clipped": 0.728106
+    },
+    "mean_weight": 0.05120263966321539,
+    "rows": 79101,
+    "quantity_sum": 214912,
+    "crlf_bytes": 3798871,
+    "crlf_sha256": "318112634dddb6f6a3f5b2b4b735081952587506745c149416bdf47fefdd71da",
+    "lf_bytes": 3719769,
+    "lf_sha256": "1d26f2b96dd8a731d7fd479905e8737a85e9258e55feec6edbe8390a95b373f9",
+    "zero_weight_test": "PASSED_BIT_EXACT",
+    "reload_test": "PASSED_BIT_EXACT"
+  },
+  "submission_champion_timestral_adaptive_selection_winner.csv": {
+    "path": "submissions\\submission_champion_timestral_adaptive_selection_winner.csv",
+    "scheme_name": "Adaptive: Selection Winner Candidate",
+    "rule_description": "Full Multi-Regime: Dead 0.00, Low 0.02, Sparse 0.05, RegMid 0.10/0.08, RegHigh 0.18/0.12",
+    "cv_metrics": {
+      "selection_unclipped": 0.756014,
+      "selection_clipped": 0.730213,
+      "check_unclipped": 0.747199,
+      "check_clipped": 0.724963,
+      "full_5f_unclipped": 0.752488,
+      "full_5f_clipped": 0.728113
+    },
+    "mean_weight": 0.057645541775704474,
+    "rows": 79101,
+    "quantity_sum": 214720,
+    "crlf_bytes": 3798863,
+    "crlf_sha256": "57426825f659a1508d6eca2738730777551282d75dcd678661831e5bd537469b",
+    "lf_bytes": 3719761,
+    "lf_sha256": "4a93a2d07b43b40c2a0b6929c1a3a2ddca08870c02f5cc92bf219494db128ea0",
+    "zero_weight_test": "PASSED_BIT_EXACT",
+    "reload_test": "PASSED_BIT_EXACT"
+  }
+}
