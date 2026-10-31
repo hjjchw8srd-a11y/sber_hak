@@ -51,5 +51,10 @@ _backup_baseline_20261030/
 experiments/chronos_lora_fold4/checkpoint/
 experiments/chronos_lora_fold4/keyed_predictions/
 
+# Timestral-209M LoRA heavy artifacts
+experiments/timestral_lora_fold4/checkpoints/
+experiments/timestral_lora_fold4/keyed_predictions/
+experiments/timestral_smoke_test/test_lora_checkpoint/
+
 
 

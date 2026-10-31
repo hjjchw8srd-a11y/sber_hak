@@ -1,0 +1,112 @@
+{
+  "manifest_name": "timestral_209m_lora_fold4_audit_manifest",
+  "protocol": "Controlled Timestral-209M LoRA Fine-Tuning Protocol",
+  "created_at": "2026-10-31 23:05:00",
+  "fold": 4,
+  "origin": 89,
+  "seed": 42,
+  "library_versions": {
+    "torch": "2.11.0+cu128",
+    "transformers": "5.22.1",
+    "peft": "0.21.2",
+    "accelerate": "1.15.0",
+    "timestral": "1.0.0",
+    "numpy": "2.4.6",
+    "pandas": "3.0.5",
+    "cuda": "12.8",
+    "cudnn": "9.1.9 (91900)"
+  },
+  "checksums": {
+    "dataset_csv_gz": "dfb461c3f313fdcc148ff882f8504b422f59f2974ac3b7290bdf4611357b6fe6",
+    "base_weights_safetensors": "1456effb9927e3daa8c7234f10497e3424233869245a9c72b8ecebaf7ad2b7fa",
+    "best_adapter_safetensors": "f15ef19650c3f3e27a9438035d17fa2970c6f6cb1a34263dcec93562360d281a",
+    "smoke_test_adapter_safetensors": "4e9c2fb81fab38296df2784c5b6607d2f6ea29fd4fe7d9112864647110bc1948",
+    "keyed_predictions_csv_gz": "a59735a1af5da89d47964aaa68dee3e05bd3be54cf0fbce89469c605f75319fc"
+  },
+  "model_specifications": {
+    "model_id": "mistralai/Timestral-209M",
+    "architecture": "TimestralModel",
+    "total_base_parameters": 209312256,
+    "trainable_lora_parameters": 1105920,
+    "trainable_percentage": 0.5255819725383419,
+    "lora_rank": 8,
+    "lora_alpha": 16,
+    "target_modules": [
+      "wQKV",
+      "wO"
+    ],
+    "patch_size": 32,
+    "d_model": 768,
+    "num_heads": 12,
+    "num_layers": 24,
+    "quantiles_count": 21
+  },
+  "training_hyperparameters": {
+    "context_length": 52,
+    "prediction_length": 9,
+    "learning_rate": 0.0001,
+    "warmup_steps": 30,
+    "lr_schedule": "warmup_cosine_decay",
+    "num_steps": 600,
+    "microbatch_size": 32,
+    "gradient_accumulation_steps": 2,
+    "effective_batch_size": 64,
+    "loss_function": "Masked 21-Quantile Pinball Loss",
+    "training_time_sec": 412.50,
+    "peak_vram_mb": 991.00
+  },
+  "temporal_isolation": {
+    "external_evaluation_window": ["2025-09-15", "2025-11-10"],
+    "internal_validation_window": ["2025-07-14", "2025-09-08"],
+    "training_history_end_week": 80,
+    "max_training_target_week": 79,
+    "overlap_percentage": 0.0
+  },
+  "best_checkpoint": {
+    "step": 600,
+    "criterion": "internal_val_unclipped_ratio",
+    "internal_val_unclipped": 0.742142,
+    "internal_val_clipped": 0.712670
+  },
+  "external_evaluation_fold4": {
+    "zero_shot_rint": {
+      "clipped_score": 0.749087,
+      "unclipped_ratio": 0.790376,
+      "smape": 66.952,
+      "wape": 52.199,
+      "rmse": 3.0965
+    },
+    "zero_shot_legacy_p": {
+      "clipped_score": 0.745406,
+      "unclipped_ratio": 0.787681,
+      "smape": 66.934,
+      "wape": 51.965,
+      "rmse": 3.0367
+    },
+    "fine_tuned_rint": {
+      "clipped_score": 0.740544,
+      "unclipped_ratio": 0.778094,
+      "smape": 65.814,
+      "wape": 51.446,
+      "rmse": 3.0690
+    },
+    "fine_tuned_legacy_p": {
+      "clipped_score": 0.736274,
+      "unclipped_ratio": 0.774658,
+      "smape": 65.735,
+      "wape": 51.161,
+      "rmse": 3.0056
+    }
+  },
+  "paths": {
+    "code": "run_timestral_lora_fold4.py",
+    "smoke_test_script": "smoke_test_timestral.py",
+    "reload_audit_script": "test_timestral_lora_reload.py",
+    "checkpoint": "experiments/timestral_lora_fold4/checkpoints/pilot/step_600",
+    "keyed_predictions": "experiments/timestral_lora_fold4/keyed_predictions/pilot/timestral_209m_lora_fold4_pilot_keyed.csv.gz",
+    "log_json": "experiments/timestral_lora_fold4/logs/pilot/timestral_lora_fold4_pilot_results.json",
+    "summary_csv": "experiments/timestral_lora_fold4/logs/pilot/timestral_lora_fold4_pilot_summary.csv",
+    "manifest": "experiments/timestral_lora_fold4/manifest.json",
+    "report": "experiments/timestral_lora_fold4/TIMESTRAL_209M_LORA_REPORT.md"
+  }
+}

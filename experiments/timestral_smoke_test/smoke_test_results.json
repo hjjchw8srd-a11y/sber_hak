@@ -1,0 +1,29 @@
+{
+  "status": "SUCCESS",
+  "model_id": "mistralai/Timestral-209M",
+  "weights_sha256": "1456effb9927e3daa8c7234f10497e3424233869245a9c72b8ecebaf7ad2b7fa",
+  "weights_size_bytes": 837271648,
+  "total_parameters": 209312256,
+  "trainable_lora_parameters": 1105920,
+  "trainable_percentage": 0.5255819725383419,
+  "lora_target_modules": [
+    "wQKV",
+    "wO"
+  ],
+  "lora_rank": 8,
+  "lora_alpha": 16,
+  "initial_loss": 0.10703910142183304,
+  "step_20_loss": 0.07862289994955063,
+  "loss_reduction_pct": 26.547496283901246,
+  "peak_vram_mb": 898.19677734375,
+  "backward_sec": 0.13383970002178103,
+  "reload_discrepancy": 6.67572021484375e-06,
+  "saved_adapter_size_bytes": 4439480,
+  "saved_adapter_sha256": "4e9c2fb81fab38296df2784c5b6607d2f6ea29fd4fe7d9112864647110bc1948",
+  "temporal_isolation": {
+    "training_target_end": 79,
+    "internal_val_start": 80,
+    "external_horizon_start": 89,
+    "overlap_pct": 0.0
+  }
+}
