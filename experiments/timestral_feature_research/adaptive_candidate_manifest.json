@@ -1,0 +1,29 @@
+{
+  "candidate_file": "submissions/submission_champion_timestral_adaptive_candidate.csv",
+  "recipe": "Adaptive Full Tuned Blend (Zero 0, Low 0, Mid 10/7, High 15/12)",
+  "cv_validation": {
+    "selection_folds_4_3_2_clipped": 0.73032,
+    "check_folds_1_0_clipped": 0.724785,
+    "full_5_fold_clipped": 0.728106,
+    "full_5_fold_unclipped": 0.752486,
+    "full_5_fold_wape": 49.298,
+    "champion_5_fold_clipped": 0.728728,
+    "fixed_w10_5_fold_clipped": 0.728249,
+    "improvement_vs_champion": -0.000622,
+    "improvement_vs_fixed_w10": -0.000143
+  },
+  "zero_weight_test": {
+    "status": "PASSED_BIT_EXACT",
+    "differing_rows": 0,
+    "max_abs_diff": 0
+  },
+  "file_integrity": {
+    "rows": 79101,
+    "quantity_sum": 214912,
+    "crlf_bytes": 3798871,
+    "crlf_sha256": "318112634dddb6f6a3f5b2b4b735081952587506745c149416bdf47fefdd71da",
+    "lf_bytes": 3719769,
+    "lf_sha256": "1d26f2b96dd8a731d7fd479905e8737a85e9258e55feec6edbe8390a95b373f9"
+  },
+  "mean_timestral_weight": 0.05120263966321539
+}
