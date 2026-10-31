@@ -1,0 +1,40 @@
+{
+  "candidate_a": {
+    "name": "candidate_timestral_standalone_lora",
+    "file": "candidate_timestral_standalone_lora.csv",
+    "sha256": "a60b8e61367e0e3313ebb72bb4d98ab94ed4eaad9711bb7c1243eb10ff5260e9",
+    "rows": 79101,
+    "total_volume": 199610.0,
+    "non_zero_rate": 0.41439425544556957,
+    "description": "Pretrained Timestral-209M with 0.5% LoRA adapter fine-tuned on full sales history."
+  },
+  "candidate_b": {
+    "name": "candidate_timestral_5pct_blend",
+    "file": "candidate_timestral_5pct_blend.csv",
+    "sha256": "ad6ec76fcd050bc00c3454a47827dc88d06243b98b5c6b4861e65b989e9ebd2a",
+    "description": "Conservative blend: 95% Champion Clipped Score + 5% Timestral-209M LoRA."
+  },
+  "adapter": {
+    "path": "C:\\Users\\lenya\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\hak\\experiments\\timestral_production_model\\final_lora_adapter",
+    "size_bytes": 4439480,
+    "sha256": "84c6e6df81be33900254a8a1f151516dfec1b5a44f5efc24dc9d403316f3c6d0",
+    "trainable_parameters": 1105920,
+    "lora_rank": 8,
+    "lora_alpha": 16,
+    "target_modules": [
+      "wQKV",
+      "wO"
+    ]
+  },
+  "future_horizon": {
+    "start_week": "2026-07-27",
+    "end_week": "2026-09-21",
+    "weeks_count": 9,
+    "series_count": 8789
+  },
+  "reproducibility": {
+    "max_raw_discrepancy": 3.0517578125e-05,
+    "max_discretized_discrepancy": 0.0,
+    "bit_exact": true
+  }
+}

@@ -54,7 +54,10 @@ experiments/chronos_lora_fold4/keyed_predictions/
 # Timestral-209M LoRA heavy artifacts
 experiments/timestral_lora_fold4/checkpoints/
 experiments/timestral_lora_fold4/keyed_predictions/
+experiments/timestral_lora_fold0/checkpoints/
+experiments/timestral_lora_fold0/keyed_predictions/
 experiments/timestral_smoke_test/test_lora_checkpoint/
+experiments/timestral_production_model/
 
 
 
