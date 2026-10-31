@@ -1,0 +1,171 @@
+{
+  "experiment_name": "chronos2_lora_fold4_pilot",
+  "model_loaded": "Chronos-2 Small (28M)",
+  "weights_status": "FALLBACK_SMALL_PRETRAINED_VERIFIED",
+  "full_120m_status": "NEED_PRETRAINED_WEIGHTS",
+  "fold": 4,
+  "origin": 89,
+  "external_window": [
+    "2025-09-15",
+    "2025-11-10"
+  ],
+  "internal_val_window": [
+    "2025-07-14",
+    "2025-09-08"
+  ],
+  "training_history_end": 80,
+  "parameters": {
+    "context_length": 52,
+    "prediction_length": 9,
+    "learning_rate": 1e-05,
+    "num_steps": 300,
+    "batch_size": 32,
+    "gradient_accumulation_steps": 2,
+    "effective_batch_size": 64
+  },
+  "lora": {
+    "applied": true,
+    "rank": 8,
+    "alpha": 16,
+    "target_modules": [
+      "output_patch_embedding.output_layer",
+      "self_attention.k",
+      "self_attention.v",
+      "self_attention.o",
+      "self_attention.q"
+    ],
+    "trainable_params": 411264,
+    "total_params": 28345888,
+    "trainable_pct": 1.4508771078189542
+  },
+  "resources": {
+    "train_sec": 104.17890309999348,
+    "inference_sec": 1.2350260999810416,
+    "train_peak_vram_mb": 435.38525390625,
+    "inf_peak_vram_mb": 399.58251953125
+  },
+  "training_loss_history": [
+    {
+      "step": 50,
+      "loss": 3.25122802734375,
+      "lr": 8.366666666666667e-06
+    },
+    {
+      "step": 100,
+      "loss": 3.20606201171875,
+      "lr": 6.700000000000001e-06
+    },
+    {
+      "step": 150,
+      "loss": 3.0157437133789062,
+      "lr": 5.033333333333333e-06
+    },
+    {
+      "step": 200,
+      "loss": 3.162452392578125,
+      "lr": 3.366666666666667e-06
+    },
+    {
+      "step": 250,
+      "loss": 3.2076275634765623,
+      "lr": 1.7000000000000002e-06
+    },
+    {
+      "step": 300,
+      "loss": 3.036693115234375,
+      "lr": 3.333333333333334e-08
+    }
+  ],
+  "internal_val_loss_history": [
+    {
+      "step": 50,
+      "eval_loss": 3.598196506500244
+    },
+    {
+      "step": 100,
+      "eval_loss": 3.586933135986328
+    },
+    {
+      "step": 150,
+      "eval_loss": 3.57960844039917
+    },
+    {
+      "step": 200,
+      "eval_loss": 3.5673978328704834
+    },
+    {
+      "step": 250,
+      "eval_loss": 3.5609774589538574
+    },
+    {
+      "step": 300,
+      "eval_loss": 3.559272289276123
+    }
+  ],
+  "final_train_loss": 3.036693115234375,
+  "final_eval_loss": 3.559272289276123,
+  "evaluation": {
+    "rint": {
+      "clipped_score": 0.7540420245256262,
+      "unclipped_ratio": 0.7969106263363713,
+      "smape": 67.59209237546125,
+      "wape": 52.62250610639172,
+      "rmse": 3.115361585250503,
+      "bias": 80.98634157410895,
+      "rmsle": 0.5774200228969584
+    },
+    "legacy_p": {
+      "clipped_score": 0.7507014989939212,
+      "unclipped_ratio": 0.794129495449061,
+      "smape": 67.67462961290566,
+      "wape": 52.36311955558438,
+      "rmse": 3.056186157146256,
+      "bias": 81.02927141587172,
+      "rmsle": 0.5823409122047997
+    },
+    "continuous_raw": {
+      "clipped_score": 0.985082635884066,
+      "unclipped_ratio": 1.0933540658916487,
+      "smape": 144.64721447775221,
+      "wape": 52.78556807887338,
+      "rmse": 3.1044193811354415,
+      "bias": 76.15295158451504,
+      "rmsle": 0.5545479400921429
+    }
+  },
+  "controls": {
+    "ensemble_scale_1m_dual_fold4": {
+      "clipped_score": 0.736573,
+      "unclipped_ratio": 0.7735,
+      "smape": 64.685983,
+      "wape": 51.43257,
+      "rmse": 3.081258,
+      "bias": 79.065592,
+      "rmsle": 0.549929
+    },
+    "chronos2_small_full_ft_fold4_rint": {
+      "clipped_score": 0.742032,
+      "unclipped_ratio": 0.793797,
+      "smape": 63.263884,
+      "wape": 52.27436,
+      "rmse": 3.09074,
+      "bias": 79.379745,
+      "rmsle": 0.558431
+    },
+    "chronos2_small_full_ft_fold4_leg": {
+      "clipped_score": 0.738396,
+      "unclipped_ratio": 0.797083,
+      "smape": 62.597288,
+      "wape": 52.562164,
+      "rmse": 3.125697,
+      "bias": 79.708315,
+      "rmsle": 0.563457
+    }
+  },
+  "paths": {
+    "code": "run_chronos_lora_fold4.py",
+    "checkpoint": "C:\\Users\\lenya\\OneDrive\\Рабочий стол\\hak\\experiments\\chronos_lora_fold4\\checkpoint\\lora_fold4_ckpt",
+    "keyed_predictions": "C:\\Users\\lenya\\OneDrive\\Рабочий стол\\hak\\experiments\\chronos_lora_fold4\\keyed_predictions\\chronos2_small_lora_fold4_keyed.csv.gz",
+    "log_json": "C:\\Users\\lenya\\OneDrive\\Рабочий стол\\hak\\experiments\\chronos_lora_fold4\\logs\\fold4_lora_results.json"
+  }
+}
