@@ -177,10 +177,12 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Chronos-2 LoRA Fine-Tuning Protocol on Fold 4")
     parser.add_argument("--model", choices=["small", "full"], default="small", help="Model size: 'small' (28M) or 'full' (120M)")
+    parser.add_argument("--run-id", type=str, default="pilot", help="Unique run identifier (default: 'pilot')")
     args = parser.parse_args()
 
+    run_id = args.run_id
     print("=" * 80)
-    print(f"CONTROLLED EXPERIMENT: CHRONOS-2 LORA FINE-TUNING (FOLD 4) - MODEL: {args.model.upper()}")
+    print(f"CONTROLLED EXPERIMENT: CHRONOS-2 LORA FINE-TUNING (FOLD 4) - MODEL: {args.model.upper()} [RUN_ID: {run_id}]")
     print("=" * 80)
 
     # 1. Environment & Library versions
@@ -201,20 +203,63 @@ def main():
     print(f"Chronos: {chronos.__version__}")
 
     # 2. Check Model Weights (Strict protocol: NO fallback when full is requested)
-    print(f"\n--- Checking Selected Model ({args.model.upper()}) Weights ---")
+    print(f"\n--- Checking Selected Model ({args.model.upper()}) Weights & Architecture ---")
     if args.model == "full":
         full_weights_dir = ROOT / 'experiments' / 'model_improvements' / 'chronos2_weights'
         full_safetensors = full_weights_dir / 'model.safetensors'
-        if not full_safetensors.exists() or full_safetensors.stat().st_size < 1000:
+        full_config_file = full_weights_dir / 'config.json'
+
+        # Requirement 6: Check configuration
+        if not full_config_file.exists():
             raise FileNotFoundError(
-                f"Full Chronos-2 (120M) pretrained weights not found at {full_weights_dir}. "
-                "Automatic fallback to Small is strictly forbidden by protocol."
+                f"Full Chronos-2 (120M) config not found at {full_config_file}. "
+                "Status: NEED_PRETRAINED_WEIGHTS."
             )
+        with open(full_config_file, 'r', encoding='utf-8') as f:
+            cfg = json.load(f)
+
+        if (
+            cfg.get("architectures") != ["Chronos2Model"]
+            or cfg.get("d_model") != 768
+            or cfg.get("num_layers") != 12
+            or cfg.get("num_heads") != 12
+            or cfg.get("d_ff") != 3072
+        ):
+            raise ValueError(
+                f"Full Chronos-2 (120M) config validation failed: {cfg}. "
+                "Expected architectures=['Chronos2Model'], d_model=768, num_layers=12, num_heads=12, d_ff=3072."
+            )
+        print(f"Verified {full_config_file.name}: architecture=Chronos2Model, d_model=768, num_layers=12, heads=12, d_ff=3072")
+
+        # Requirement 6: Check expected file size and SHA256 (official amazon/chronos-2)
+        EXPECTED_120M_SIZE = 477930472
+        EXPECTED_120M_SHA256 = "ddcda3c7508bf2528087723e98a20707cc04b7f370ae275a9fd88078ddba4f42"
+
+        if not full_safetensors.exists():
+            raise FileNotFoundError(
+                f"Full Chronos-2 (120M) pretrained weights not found at {full_safetensors}. "
+                "Automatic fallback to Small is strictly forbidden by protocol. "
+                "Status: NEED_PRETRAINED_WEIGHTS."
+            )
+
+        actual_size = full_safetensors.stat().st_size
+        if actual_size != EXPECTED_120M_SIZE:
+            raise ValueError(
+                f"Full Chronos-2 (120M) weights size mismatch: got {actual_size:,} bytes, "
+                f"expected official {EXPECTED_120M_SIZE:,} bytes. Status: NEED_PRETRAINED_WEIGHTS."
+            )
+
+        weights_sha = sha256_file(full_safetensors)
+        if weights_sha.lower() != EXPECTED_120M_SHA256.lower():
+            raise ValueError(
+                f"Full Chronos-2 (120M) SHA256 mismatch: got {weights_sha}, "
+                f"expected {EXPECTED_120M_SHA256}. Status: NEED_PRETRAINED_WEIGHTS."
+            )
+
         active_weights_dir = full_weights_dir
         model_name = "Chronos-2 (120M)"
         model_tag = "chronos2_120m"
-        weights_sha = sha256_file(full_safetensors)
-        print(f"Verified {model_name}: size={full_safetensors.stat().st_size:,} bytes, SHA256={weights_sha}")
+        print(f"Verified {model_name}: size={actual_size:,} bytes, SHA256={weights_sha}")
         status_weights = "CONFIRMED_PRETRAINED_FULL_120M"
     else:
         small_weights_dir = ROOT / 'experiments' / 'urgent_models' / 'chronos2_small'
@@ -228,18 +273,19 @@ def main():
         print(f"Verified {model_name}: size={small_safetensors.stat().st_size:,} bytes, SHA256={weights_sha}")
         status_weights = "CONFIRMED_PRETRAINED_SMALL_28M"
 
-    # 3. Setup output directories
+    # 3. Setup strictly isolated output directories (Requirement 1)
     out_dir = ROOT / 'experiments' / 'chronos_lora_fold4'
-    ckpt_dir = out_dir / 'checkpoint'
-    keyed_dir = out_dir / 'keyed_predictions'
-    logs_dir = out_dir / 'logs'
-    for d in [out_dir, ckpt_dir, keyed_dir, logs_dir]:
+    ckpt_dir = out_dir / 'checkpoint' / model_tag
+    trainer_output_dir = out_dir / 'trainer_output' / f"{model_tag}_{run_id}"
+    keyed_dir = out_dir / 'keyed_predictions' / model_tag
+    logs_dir = out_dir / 'logs' / model_tag
+    for d in [out_dir, ckpt_dir, trainer_output_dir, keyed_dir, logs_dir]:
         d.mkdir(parents=True, exist_ok=True)
 
-    ckpt_name = f"{model_tag}_lora_fold4_ckpt"
-    keyed_filename = f"{model_tag}_lora_fold4_keyed.csv.gz"
-    json_filename = f"{model_tag}_lora_fold4_results.json"
-    summary_filename = f"{model_tag}_lora_fold4_summary.csv"
+    ckpt_name = f"lora_fold4_{run_id}_ckpt"
+    keyed_filename = f"{model_tag}_lora_fold4_{run_id}_keyed.csv.gz"
+    json_filename = f"{model_tag}_lora_fold4_{run_id}_results.json"
+    summary_filename = f"{model_tag}_lora_fold4_{run_id}_summary.csv"
 
     # 4. Load Weekly Dataset
     print("\n--- Loading Dataset & Setting Strict Splits ---")
@@ -352,8 +398,8 @@ def main():
         learning_rate=LR,
         num_steps=STEPS,
         batch_size=BATCH_SIZE,
-        output_dir=ckpt_dir,
-        finetuned_ckpt_name="lora_fold4_ckpt",
+        output_dir=trainer_output_dir,
+        finetuned_ckpt_name=ckpt_name,
         callbacks=[loss_callback],
         logging_steps=LOG_STEPS,
         eval_steps=EVAL_STEPS,
@@ -451,12 +497,10 @@ def main():
     assert np.isfinite(y_leg).all(), "Non-finite values in legacy_p predictions!"
     print(f"Integrity check PASSED: exactly {len(keyed_df):,} rows, unique keys, no NaN/inf.")
 
-    # Save keyed predictions
+    # Save keyed predictions (Strictly isolated by model_tag and run_id)
     keyed_path = keyed_dir / keyed_filename
     keyed_df.to_csv(keyed_path, index=False, compression='gzip')
     print(f"Keyed predictions saved: {keyed_path.name} ({keyed_path.stat().st_size:,} bytes)")
-    if args.model == "small" and keyed_filename != "chronos2_small_lora_fold4_keyed.csv.gz":
-        keyed_df.to_csv(keyed_dir / "chronos2_small_lora_fold4_keyed.csv.gz", index=False, compression='gzip')
 
     # 10. Metric Evaluation
     print("\n--- Metric Evaluation ---")
@@ -555,19 +599,17 @@ def main():
         },
         'paths': {
             'code': 'run_chronos_lora_fold4.py',
-            'checkpoint': str(Path('experiments/chronos_lora_fold4/checkpoint') / ckpt_name),
-            'keyed_predictions': str(Path('experiments/chronos_lora_fold4/keyed_predictions') / keyed_filename),
-            'log_json': str(Path('experiments/chronos_lora_fold4/logs') / json_filename),
+            'checkpoint': str(Path('experiments/chronos_lora_fold4/checkpoint') / model_tag / ckpt_name),
+            'trainer_output': str(Path('experiments/chronos_lora_fold4/trainer_output') / f"{model_tag}_{run_id}"),
+            'keyed_predictions': str(Path('experiments/chronos_lora_fold4/keyed_predictions') / model_tag / keyed_filename),
+            'log_json': str(Path('experiments/chronos_lora_fold4/logs') / model_tag / json_filename),
             'manifest': 'experiments/chronos_lora_fold4/manifest.json',
         }
     }
 
-    # Save primary and alias JSON
+    # Save JSON strictly in model_tag logs directory (isolated, no un-namespaced overwriting)
     with open(logs_dir / json_filename, 'w', encoding='utf-8') as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
-    if json_filename != "fold4_lora_results.json":
-        with open(logs_dir / "fold4_lora_results.json", 'w', encoding='utf-8') as f:
-            json.dump(report, f, indent=2, ensure_ascii=False)
 
     summary_rows = []
     for v_name, res in eval_results.items():
@@ -608,9 +650,6 @@ def main():
     })
 
     pd.DataFrame(summary_rows).to_csv(logs_dir / summary_filename, index=False)
-    if summary_filename != "fold4_lora_summary.csv":
-        pd.DataFrame(summary_rows).to_csv(logs_dir / "fold4_lora_summary.csv", index=False)
-
     print(f"\nResults JSON saved to {logs_dir / json_filename}")
     print(f"Summary CSV saved to {logs_dir / summary_filename}")
 
