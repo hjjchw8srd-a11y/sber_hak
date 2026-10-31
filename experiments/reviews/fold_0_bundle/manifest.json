@@ -1,0 +1,37 @@
+{
+  "bundle_name": "fold_0_bundle",
+  "training_cutoff_date": "2026-05-24",
+  "feature_columns": [
+    "warehouse_name",
+    "article",
+    "category_lvl_1",
+    "category_lvl_2",
+    "category_lvl_3",
+    "horizon",
+    "time_idx",
+    "quantity_lag_1",
+    "quantity_lag_2",
+    "quantity_lag_4",
+    "quantity_lag_13",
+    "quantity_mean_4",
+    "quantity_mean_13",
+    "quantity_std_13",
+    "quantity_nonzero_rate_13",
+    "month",
+    "quarter",
+    "week_of_year",
+    "week_sin",
+    "week_cos",
+    "article_network_sales_mean_13_log",
+    "article_network_growth_4_vs_13",
+    "warehouse_share_article_13",
+    "active_warehouses_article_13"
+  ],
+  "categorical_columns": [
+    "warehouse_name",
+    "article",
+    "category_lvl_1",
+    "category_lvl_2",
+    "category_lvl_3"
+  ]
+}

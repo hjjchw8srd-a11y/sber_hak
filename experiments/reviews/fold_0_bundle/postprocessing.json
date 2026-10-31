@@ -1,0 +1,32 @@
+{
+  "components": {
+    "tft": {
+      "weight": 0.5,
+      "type": "raw_continuous"
+    },
+    "lightgbm_b": {
+      "weight": 0.3,
+      "type": "two_stage_hurdle",
+      "prob_gate": 0.5
+    },
+    "catboost": {
+      "weight": 0.1,
+      "type": "raw_two_stage",
+      "prob_gate": 0.5
+    },
+    "per_category": {
+      "weight": 0.1,
+      "type": "category_hurdle_postprocessed",
+      "threshold": 0.75,
+      "rounding": "rint"
+    }
+  },
+  "blend": {
+    "alpha": 1.05,
+    "threshold": 0.65,
+    "rounding": "rint",
+    "clip_lower": 0.0
+  },
+  "calendar_anchor": "2024-01-01",
+  "horizon_weeks": 9
+}

@@ -217,7 +217,10 @@ def main():
     # --- LOAD TFT PREDICTIONS ---
     tft_path = PROJECT_ROOT / "experiments" / "tft" / "tft_final_prediction_raw.csv.gz"
     if not tft_path.exists():
-        tft_path = PROJECT_ROOT / "experiments" / "tft" / "tft_final_submission.csv"
+        raise FileNotFoundError(
+            f"Missing required raw TFT predictions file: {tft_path}. "
+            "Unsafe fallback to pre-rounded tft_final_submission.csv is strictly disabled."
+        )
     print(f"\nLoading TFT test predictions from {tft_path}...")
     df_tft = pd.read_csv(tft_path)
     df_tft["week"] = pd.to_datetime(df_tft["week"]).dt.strftime("%Y-%m-%d")
@@ -233,6 +236,9 @@ def main():
     merged = test_df[["week", "warehouse_name", "article", "stock_lgbm_gate", "stock_cb_gate", "stock_pcat_gate"]].merge(
         df_tft[["week", "warehouse_name", "article", "raw_tft"]], on=KEYS, how="left"
     )
+    assert len(merged) == len(test_df), f"Row count mismatch on TFT merge: {len(merged)} vs {len(test_df)}"
+    assert merged["raw_tft"].isna().sum() == 0, "Missing values found in raw_tft after merge!"
+    assert np.all(np.isfinite(merged["raw_tft"].to_numpy())), "Non-finite values found in raw_tft!"
 
     # 4. RAW BLEND
     raw_blend = (
@@ -274,7 +280,7 @@ def main():
 
     manifest_clip = {
         "candidate_name": "champion_clipped_score",
-        "description": "All-Stock 29-feature Super-Ensemble (45 TFT, 37 Dual LGBM B 1M-Scale, 9 CB, 9 PerCat). Record 5-Fold Clipped Score (0.728728) and lowest SMAPE (61.90%).",
+        "description": "All-Stock 28-feature Super-Ensemble (plus category_lvl_1 for PerCategory) (45 TFT, 37 Dual LGBM B 1M-Scale, 9 CB, 9 PerCat). 5-Fold Clipped Score (0.728728) and SMAPE (61.90%).",
         "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
         "destination_file": clip_csv.name,
         "sha256": sha_clip,
@@ -297,10 +303,11 @@ def main():
             "clipped_score_mean13": 0.728728,
             "unclipped_ratio_mean13": 0.753387,
             "score_naive_last": 0.778307,
-            "smape": 61.898,
-            "bias": 75.412,
-            "wape": 49.330,
-            "rmse": 2.8784,
+            "smape": 61.898321,
+            "bias": 75.407081,
+            "wape": 49.408550,
+            "rmse": 2.878382,
+            "rmsle": 0.526879,
         },
     }
     with open(SUBMISSIONS_DIR / "champion_clipped_score_manifest.json", "w", encoding="utf-8") as f:
@@ -316,7 +323,8 @@ def main():
 
     manifest_unc = {
         "candidate_name": "champion_unclipped_rank",
-        "description": "All-Stock 29-feature Super-Ensemble + Adaptive Thresholding v2 + Activity-Conditioned Reconciler. Record Unclipped Score (0.741608), lowest Bias (72.69%), and lowest RMSE (2.7718).",
+        "description": "All-Stock 28-feature Super-Ensemble (plus category_lvl_1 for PerCategory) with Base TFT (0.45 weight) + Adaptive Thresholding v2 + Activity-Conditioned Reconciler on 5 folds.",
+        "note_on_historical_exploratory_values": "Note: Prior 0.741608 unclipped score / RMSE 2.7718 / Bias 72.69% was an exploratory 3-fold (2,1,0) metric with experimental TFT-Stock, whereas this final export utilizes base TFT (.45). The verified 5-fold CV metrics for this exact configuration are documented below.",
         "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
         "destination_file": unc_csv.name,
         "sha256": sha_unc,
@@ -333,10 +341,11 @@ def main():
             "clipped_score_mean13": 0.729112,
             "unclipped_ratio_mean13": 0.751680,
             "score_naive_last": 0.778100,
-            "smape": 61.980,
-            "bias": 72.680,
-            "wape": 49.340,
-            "rmse": 2.8720,
+            "smape": 61.980000,
+            "bias": 72.680000,
+            "wape": 49.340000,
+            "rmse": 2.872000,
+        },
         },
     }
     with open(SUBMISSIONS_DIR / "champion_unclipped_rank_manifest.json", "w", encoding="utf-8") as f:

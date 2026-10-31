@@ -1,6 +1,6 @@
 {
   "candidate_name": "champion_unclipped_rank",
-  "description": "All-Stock 29-feature Super-Ensemble + Adaptive Thresholding v2 + Activity-Conditioned Reconciler. Record Unclipped Score (0.741608), lowest Bias (72.69%), and lowest RMSE (2.7718).",
+  "description": "All-Stock 28-feature Super-Ensemble (plus category_lvl_1 for PerCategory) with Base TFT (0.45 weight) + Adaptive Thresholding v2 + Activity-Conditioned Reconciler on 5 folds.",
   "created_at": "2026-10-31 13:47:49",
   "destination_file": "champion_unclipped_rank.csv",
   "sha256": "1a6df450da9955e7001a09d291f85e7593681380636879947e35c8b4850babfb",
@@ -65,5 +65,6 @@
     "bias": 72.68,
     "wape": 49.34,
     "rmse": 2.872
-  }
+  },
+  "note_on_historical_exploratory_values": "Note: Prior 0.741608 unclipped score / RMSE 2.7718 / Bias 72.69% was an exploratory 3-fold (2,1,0) metric with experimental TFT-Stock, whereas this final export utilizes base TFT (.45). The verified 5-fold CV metrics for this exact configuration are documented below."
 }

@@ -6,8 +6,8 @@
     "git_commit": "df377f10103fc59114bc8c77cec54cc5119c0a0c",
     "defense_archive": "defense_package_candidate_lgbm52.zip",
     "defense_archive_sha256": "5ed6c902a4789dd2cfaea4a7053cf89b9f3b827c742b9e735929217b65904444",
-    "submission_file": "final_submission.csv",
-    "submission_sha256": "7bf5e15ed2bdfa22c0cb13b9d0bf62cc5048273b0a1e82035f55579cc83158b7"
+    "submission_file": "candidate_lgbm52.csv",
+    "submission_sha256": "d8ff734c962bc782987f750962e6110fb6204ed4cacc7874048d160bd7ad1f0f"
   },
   "status": "FROZEN_DEFENSE_CHAMPION",
   "description": "Baseline 4-component ensemble with LightGBM Variant B trained on 52 historical origins.",

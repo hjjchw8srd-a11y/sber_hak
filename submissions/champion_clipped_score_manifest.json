@@ -1,6 +1,6 @@
 {
   "candidate_name": "champion_clipped_score",
-  "description": "All-Stock 29-feature Super-Ensemble (45 TFT, 37 Dual LGBM B 1M-Scale, 9 CB, 9 PerCat). Record 5-Fold Clipped Score (0.728728) and lowest SMAPE (61.90%).",
+  "description": "All-Stock 28-feature Super-Ensemble (plus category_lvl_1 for PerCategory) (45 TFT, 37 Dual LGBM B 1M-Scale, 9 CB, 9 PerCat). 5-Fold Clipped Score (0.728728) and SMAPE (61.90%).",
   "created_at": "2026-10-31 13:47:49",
   "destination_file": "champion_clipped_score.csv",
   "sha256": "8dd3d7d71b0e17700eb092af3f41ee43864bddeeb79cbb944ea022d8d6e56ee1",
@@ -57,9 +57,10 @@
     "clipped_score_mean13": 0.728728,
     "unclipped_ratio_mean13": 0.753387,
     "score_naive_last": 0.778307,
-    "smape": 61.898,
-    "bias": 75.412,
-    "wape": 49.33,
-    "rmse": 2.8784
+    "smape": 61.898321,
+    "bias": 75.407081,
+    "wape": 49.40855,
+    "rmse": 2.878382,
+    "rmsle": 0.526879
   }
 }

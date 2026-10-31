@@ -146,10 +146,16 @@ def run_fold(matrices, fold, origin, configs, SEEDS):
 
     feature_cols = [c for c in X_val.columns if c not in ["category_lvl_1"]]
 
-    # Fixed components (CB and PerCat on 29 features)
+    # Fixed components (CB and PerCat on 28 features + category_lvl_1)
     pred_cb = train_predict_stock_catboost(X_train_cb_42, y_train_cb_42, X_val, feature_cols)
     pred_pcat = train_predict_stock_per_category(X_train_lgb_42, y_train_lgb_42, X_val, feature_cols + ["category_lvl_1"])
-    q_tft = df_f["raw_tft"].to_numpy(dtype=np.float64)
+    
+    # Exact key-based merge for TFT predictions (never rely on row ordering)
+    merged_tft = truth[KEYS].merge(df_f[KEYS + ["raw_tft"]], on=KEYS, how="left")
+    assert len(merged_tft) == len(truth), f"Row count mismatch on TFT merge: {len(merged_tft)} vs {len(truth)}"
+    assert merged_tft["raw_tft"].isna().sum() == 0, "Missing values found in raw_tft merge!"
+    assert np.all(np.isfinite(merged_tft["raw_tft"].to_numpy())), "Non-finite values found in raw_tft!"
+    q_tft = merged_tft["raw_tft"].to_numpy(dtype=np.float64)
 
     # Active mask for adaptive thresholding
     # nonzero_rate_13 >= 0.4

@@ -38,3 +38,13 @@ CHECKPOINT_CATBOOST_V1.md
 weekly_data/
 weekly_plots/
 
+# Pretrained weights and temporary training logs
+experiments/urgent_models/
+lightning_logs/
+catboost_info/
+_backup_baseline_20261030/
+*.safetensors
+*.bin
+*.pt
+
+
