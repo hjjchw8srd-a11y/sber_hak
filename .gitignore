@@ -47,4 +47,9 @@ _backup_baseline_20261030/
 *.bin
 *.pt
 
+# Chronos-2 LoRA Fold 4 heavy artifacts
+experiments/chronos_lora_fold4/checkpoint/
+experiments/chronos_lora_fold4/keyed_predictions/
+
+
 

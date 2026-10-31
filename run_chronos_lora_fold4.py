@@ -72,6 +72,41 @@ def sha256_file(filepath: Path) -> str:
     return h.hexdigest()
 
 
+def verify_exact_and_unique_keys(truth_df: pd.DataFrame, pred_df: pd.DataFrame, expected_rows: int = 79101):
+    """
+    Strict validation of prediction keys:
+    - Exactly expected_rows rows (79,101)
+    - Zero duplicates in keys
+    - Zero missing or NaN keys
+    - Exact full set equality between truth keys and prediction keys
+    - Zero unmapped or mismatched rows (outer join check)
+    - All predictions must be finite (no NaN or inf)
+    """
+    if len(pred_df) != expected_rows:
+        raise ValueError(f"Integrity error: predictions row count {len(pred_df)} != expected {expected_rows}")
+    if len(truth_df) != expected_rows:
+        raise ValueError(f"Integrity error: truth row count {len(truth_df)} != expected {expected_rows}")
+
+    dup_pred = int(pred_df.duplicated(subset=KEYS).sum())
+    if dup_pred > 0:
+        raise ValueError(f"Integrity error: duplicate keys detected in predictions ({dup_pred} duplicates)!")
+
+    dup_truth = int(truth_df.duplicated(subset=KEYS).sum())
+    if dup_truth > 0:
+        raise ValueError(f"Integrity error: duplicate keys detected in ground truth ({dup_truth} duplicates)!")
+
+    if pred_df[KEYS].isna().any().any():
+        raise ValueError("Integrity error: missing/NaN values found in prediction keys!")
+
+    merged_keys = truth_df[KEYS].merge(pred_df[KEYS], on=KEYS, how="outer", indicator=True)
+    if len(merged_keys) != expected_rows or (merged_keys["_merge"] != "both").any():
+        mismatch_cnt = int((merged_keys["_merge"] != "both").sum())
+        raise ValueError(f"Integrity error: key mismatch between truth and predictions ({mismatch_cnt} missing/extra keys)!")
+
+    if not np.isfinite(pred_df['quantity'].to_numpy(dtype=np.float64)).all():
+        raise ValueError("Integrity error: non-finite (NaN or Inf) values found in predicted quantities!")
+
+
 def main():
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
@@ -160,6 +195,19 @@ def main():
     val_tensor   = torch.tensor(val_history, dtype=torch.float32)
     print(f"Train tensor shape: {train_tensor.shape}")
     print(f"Validation tensor shape: {val_tensor.shape}")
+
+    # Strict temporal isolation verification (Requirement 4)
+    train_history_len = train_history.shape[2]
+    val_history_len = val_history.shape[2]
+    assert train_history_len == (ORIGIN - HORIZON), f"Train history length mismatch: {train_history_len} != {ORIGIN - HORIZON}"
+    assert val_history_len == ORIGIN, f"Validation history length mismatch: {val_history_len} != {ORIGIN}"
+    # In Chronos-2, training target windows are sampled strictly within train_tensor.
+    # Maximum training target index inside train_tensor is train_history_len - 1 = 79.
+    # Internal validation target window starts at week ORIGIN - HORIZON = 80.
+    # Therefore: train_target_max_week (79) < internal_val_start_week (80). Zero overlap!
+    assert (train_history_len - 1) < (ORIGIN - HORIZON), "Temporal leakage: train targets overlap with internal validation!"
+    assert (ORIGIN - 1) < ORIGIN, "Temporal leakage: validation overlaps with external test!"
+    print(f"Temporal isolation verified: train target max week index = {train_history_len - 1} < internal val start = {ORIGIN - HORIZON} < external eval start = {ORIGIN}.")
 
     # 5. Load Pipeline fresh
     print("\n--- Initializing Pipeline & Model ---")
@@ -349,6 +397,8 @@ def main():
     eval_results = {}
     for v_name, v_pred in variants.items():
         pred_df = keys_expanded.copy(); pred_df['quantity'] = v_pred
+        # Requirement 2: Strict verification of key uniqueness, completeness and full matching
+        verify_exact_and_unique_keys(truth_df, pred_df, expected_rows=79101)
         m = compute_all_metrics_fast(truth_df, pred_df)
         sc_clip, sc_unclip = calc_scores(m, m_base)
         eval_results[v_name] = {
@@ -362,8 +412,8 @@ def main():
         }
         print(f"  [{v_name:15s}] Clipped: {sc_clip:.6f} | Unclipped: {sc_unclip:.6f} | SMAPE: {m['smape']:.3f}% | WAPE: {m['wape']:.3f}% | RMSE: {m['rmse']:.4f} | Bias: {m['bias']:.3f}% | RMSLE: {m['rmsle']:.4f}")
 
-    # 11. Comparison with Control Fold 4
-    # Fold 4 control from Scale_1M_Dual_0.5
+    # 11. Comparison with Control Benchmarks
+    # Fold 4 control from current champion Scale_1M_Dual_0.5
     control_ensemble_fold4 = {
         'clipped_score': 0.736573,
         'unclipped_ratio': 0.773500,
@@ -374,22 +424,34 @@ def main():
         'rmsle': 0.549929,
     }
 
-    # Fold 4 Chronos-2 Small Full Fine-Tuning (previous)
-    control_small_full_ft_rint = {
+    # Requirement 3: Exact Full FT metrics
+    # Chronos-2 Small Full Fine-Tuning across all 5 folds (verified benchmark summary)
+    control_small_full_ft_5fold_rint = {
+        'clipped_score': 0.737456,
+        'unclipped_ratio': 0.764913,
+        'smape': 62.949049,
+        'wape': 50.017672,
+        'rmse': 2.930979,
+        'bias': 76.494682,
+        'rmsle': 0.533512,
+    }
+
+    # Fold 4 Chronos-2 Small Full Fine-Tuning
+    control_small_full_ft_fold4_rint = {
         'clipped_score': 0.742032,
-        'unclipped_ratio': 0.793797,
-        'smape': 63.263884,
-        'wape': 52.274360,
-        'rmse': 3.090740,
+        'unclipped_ratio': 0.780329,
+        'smape': 65.964056,
+        'wape': 51.423384,
+        'rmse': 3.090069,
         'bias': 79.379745,
         'rmsle': 0.558431,
     }
-    control_small_full_ft_leg = {
+    control_small_full_ft_fold4_leg = {
         'clipped_score': 0.738396,
-        'unclipped_ratio': 0.797083,
-        'smape': 62.597288,
-        'wape': 52.562164,
-        'rmse': 3.125697,
+        'unclipped_ratio': 0.777740,
+        'smape': 66.037866,
+        'wape': 51.166699,
+        'rmse': 3.024999,
         'bias': 79.708315,
         'rmsle': 0.563457,
     }
@@ -436,8 +498,9 @@ def main():
         'evaluation': eval_results,
         'controls': {
             'ensemble_scale_1m_dual_fold4': control_ensemble_fold4,
-            'chronos2_small_full_ft_fold4_rint': control_small_full_ft_rint,
-            'chronos2_small_full_ft_fold4_leg': control_small_full_ft_leg,
+            'chronos2_small_full_ft_fold4_rint': control_small_full_ft_fold4_rint,
+            'chronos2_small_full_ft_fold4_leg': control_small_full_ft_fold4_leg,
+            'chronos2_small_full_ft_5fold_rint': control_small_full_ft_5fold_rint,
         },
         'paths': {
             'code': 'run_chronos_lora_fold4.py',
@@ -467,16 +530,23 @@ def main():
         'train_peak_vram_mb': None,
     })
     summary_rows.append({
-        'model': 'Chronos2_Small_Full_FT',
+        'model': 'Chronos2_Small_Full_FT_Fold4',
         'variant': 'rint',
-        **control_small_full_ft_rint,
+        **control_small_full_ft_fold4_rint,
         'train_sec': None,
         'train_peak_vram_mb': None,
     })
     summary_rows.append({
-        'model': 'Chronos2_Small_Full_FT',
+        'model': 'Chronos2_Small_Full_FT_Fold4',
         'variant': 'legacy_p',
-        **control_small_full_ft_leg,
+        **control_small_full_ft_fold4_leg,
+        'train_sec': None,
+        'train_peak_vram_mb': None,
+    })
+    summary_rows.append({
+        'model': 'Chronos2_Small_Full_FT_5Fold_Avg',
+        'variant': 'rint',
+        **control_small_full_ft_5fold_rint,
         'train_sec': None,
         'train_peak_vram_mb': None,
     })

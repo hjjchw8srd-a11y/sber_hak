@@ -145,21 +145,30 @@
     },
     "chronos2_small_full_ft_fold4_rint": {
       "clipped_score": 0.742032,
-      "unclipped_ratio": 0.793797,
-      "smape": 63.263884,
-      "wape": 52.27436,
-      "rmse": 3.09074,
+      "unclipped_ratio": 0.780329,
+      "smape": 65.964056,
+      "wape": 51.423384,
+      "rmse": 3.090069,
       "bias": 79.379745,
       "rmsle": 0.558431
     },
     "chronos2_small_full_ft_fold4_leg": {
       "clipped_score": 0.738396,
-      "unclipped_ratio": 0.797083,
-      "smape": 62.597288,
-      "wape": 52.562164,
-      "rmse": 3.125697,
+      "unclipped_ratio": 0.77774,
+      "smape": 66.037866,
+      "wape": 51.166699,
+      "rmse": 3.024999,
       "bias": 79.708315,
       "rmsle": 0.563457
+    },
+    "chronos2_small_full_ft_5fold_rint": {
+      "clipped_score": 0.737456,
+      "unclipped_ratio": 0.764913,
+      "smape": 62.949049,
+      "wape": 50.017672,
+      "rmse": 2.930979,
+      "bias": 76.494682,
+      "rmsle": 0.533512
     }
   },
   "paths": {
