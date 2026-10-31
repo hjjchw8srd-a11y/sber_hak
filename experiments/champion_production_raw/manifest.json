@@ -1,0 +1,21 @@
+{
+  "status": "VERIFIED_EXACT",
+  "rows": 79101,
+  "max_abs_difference_vs_control": 0,
+  "different_rows": 0,
+  "control_crlf_sha256": "09cd97d4dc930a5280bb93ae249f01ded35d755fff9b276a35e7473359022939",
+  "control_lf_sha256": "ef658d22e8f8f685c6d9d0041c18854a06a900f9ef014368c0fddd70006647d0",
+  "champion_raw_components_sha256": "272ca0bf04ca7fa798b6cab916c3e1324e30e4d5b5851459c98218885ba6d13e",
+  "component_weights": {
+    "tft": 0.45,
+    "lightgbm": 0.37,
+    "catboost": 0.09,
+    "per_category": 0.09
+  },
+  "postprocessing": {
+    "alpha": 1.05,
+    "threshold": 0.65,
+    "rounding": "rint",
+    "clip_lower": 0
+  }
+}

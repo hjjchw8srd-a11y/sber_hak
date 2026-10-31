@@ -1,0 +1,11 @@
+# Auto detect text files and perform LF normalization in repo database
+* text=auto
+
+# Preserve exact submission line endings (CRLF) across all platforms
+*.csv text eol=crlf
+
+# Repository code and scripts use standard LF
+*.py text eol=lf
+*.sh text eol=lf
+*.json text eol=lf
+*.md text eol=lf

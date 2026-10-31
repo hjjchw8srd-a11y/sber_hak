@@ -574,6 +574,7 @@ class Predictor:
         self,
         sales_df: pd.DataFrame,
         stock_df: pd.DataFrame,
+        return_raw: bool = False,
     ) -> pd.DataFrame:
         """Runs the complete ensemble forecast on arbitrary sales and stock data."""
         extended_data, future_mondays, test_origin = self.prepare_dataset_from_raw(sales_df, stock_df)
@@ -741,8 +742,27 @@ class Predictor:
                 final_quantity = np.where(is_rescued, rescued_vals, final_quantity)
 
         merged["quantity"] = final_quantity
-        result = merged[KEYS + ["quantity"]].sort_values(KEYS).reset_index(drop=True)
+        if return_raw:
+            merged["raw_tft"] = merged["q_tft"]
+            merged["raw_lgb"] = merged["gated_lgb"]
+            merged["raw_cb"] = merged["cb_pred"]
+            merged["raw_pcat"] = merged["pcat_postprocessed"]
+            merged["raw_champion"] = raw_blend
+            result = merged[KEYS + ["raw_tft", "raw_lgb", "raw_cb", "raw_pcat", "raw_champion", "quantity"]].sort_values(KEYS).reset_index(drop=True)
+        else:
+            result = merged[KEYS + ["quantity"]].sort_values(KEYS).reset_index(drop=True)
         return result
+
+    def predict_raw_components(
+        self,
+        sales_df: pd.DataFrame,
+        stock_df: pd.DataFrame,
+    ) -> pd.DataFrame:
+        """
+        Runs the complete inference pipeline and returns raw continuous components,
+        raw_champion, and post-processed quantity.
+        """
+        return self.predict(sales_df, stock_df, return_raw=True)
 
 
 # Global singleton instance for CLI / API
@@ -753,6 +773,7 @@ def predict_from_history(
     sales: Union[str, Path, pd.DataFrame],
     stock: Union[str, Path, pd.DataFrame],
     bundle_dir: Optional[Union[str, Path]] = None,
+    return_raw: bool = False,
 ) -> pd.DataFrame:
     """
     Unified entry point for CLI and API.
@@ -772,4 +793,4 @@ def predict_from_history(
     cutoff_date = sales_df["date"].max()
     stock_df = validate_and_load_stock(stock, cutoff_date=cutoff_date)
 
-    return _GLOBAL_PREDICTOR.predict(sales_df, stock_df)
+    return _GLOBAL_PREDICTOR.predict(sales_df, stock_df, return_raw=return_raw)

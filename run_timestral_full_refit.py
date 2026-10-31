@@ -2,18 +2,27 @@
 """
 run_timestral_full_refit.py
 
-Production Full-History Refit of Timestral-209M LoRA on all historical observations (Weeks 0..133).
-Guaranteed Zero Future Leakage:
-- Training origins: k in [52, 125].
-- Max target window: [125, 133] strictly <= 133.
-- Horizon: 9 weeks.
-- Context: 52 weeks.
+Production Full-History Refit of Timestral-209M LoRA on all historical observations (Weeks 0..133)
+and mathematically exact raw-scale blending with the Champion pipeline.
 
-Inference:
-- Context window: Weeks 82..133 (last 52 historical weeks).
-- Future 9-week horizon: 2026-07-27 to 2026-09-21.
-- Outputs: 21 quantiles, median continuous prediction, rint, legacy_p.
-- Blending: Blends with champion submission at optimal weight w*.
+Aligned 100% with Cross-Validation Recipe:
+- Pretrained base model: experiments/urgent_models/timestral_209m (untouched original weights)
+- LoRA config: r=8, alpha=16, target_modules=["wQKV", "wO"], dropout=0.05, bias="none"
+- Optimizer: AdamW(lr=1e-4, weight_decay=1e-4)
+- Schedule: 30-step linear warmup + cosine decay to 0.01 * lr
+- Training budget: 600 steps predetermined a priori (no future facts used)
+- History: Full panel Weeks 0..133 (134 weeks), valid origins k in [52, 125], context=52, horizon=9
+- Sampling: StratifiedWindowSamplerFullHistory (seed=42)
+- Zero future leakage: latest target index <= 133
+
+Champion & Blending Protocol:
+- Control submission: delivery_final/submission.csv (verified SHA256, strictly zero fallback)
+- Champion raw continuous predictions recovered via the verified inference pipeline
+  (0.45*TFT + 0.37*LightGBM_Dual + 0.09*CatBoost + 0.09*PerCategory)
+- Zero-weight test: blend(w=0) MUST match delivery_final/submission.csv 100% with max delta == 0
+- Honest CV blend formula:
+  final = apply_p((1 - w) * champion_raw + w * timestral_raw, alpha=1.05, thresh=0.65)
+  for w = 0.05 and w = 0.10.
 """
 
 from __future__ import annotations
@@ -33,9 +42,11 @@ from peft import LoraConfig, get_peft_model, PeftModel
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "sber_hak"))
+sys.path.insert(0, str(ROOT / "forecast-container"))
 
 from timestral import TimestralForecaster
 from timestral.forecaster import pad_to_patch
+from app.predictor import predict_from_history
 
 KEYS = ["week", "warehouse_name", "article"]
 HORIZON = 9
@@ -48,6 +59,8 @@ FUTURE_WEEKS = [
     "2026-07-27", "2026-08-03", "2026-08-10", "2026-08-17",
     "2026-08-24", "2026-08-31", "2026-09-07", "2026-09-14", "2026-09-21"
 ]
+CONTROL_SHA256_CRLF = "09cd97d4dc930a5280bb93ae249f01ded35d755fff9b276a35e7473359022939"
+CONTROL_SHA256_LF = "ef658d22e8f8f685c6d9d0041c18854a06a900f9ef014368c0fddd70006647d0"
 
 
 def sha256_file(filepath: Path) -> str:
@@ -56,6 +69,10 @@ def sha256_file(filepath: Path) -> str:
         while chunk := f.read(1024 * 1024):
             h.update(chunk)
     return h.hexdigest()
+
+
+def sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
 
 
 def pinball_loss_21(preds: torch.Tensor, target: torch.Tensor, quantiles: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
@@ -127,7 +144,42 @@ class StratifiedWindowSamplerFullHistory:
 def apply_p(raw_arr: np.ndarray, alpha: float = 1.05, thresh: float = 0.65) -> np.ndarray:
     scaled = raw_arr * alpha
     gated = np.where(scaled < thresh, 0.0, scaled)
-    return np.rint(gated).clip(0, None)
+    return np.rint(gated).clip(0, None).astype(int)
+
+
+def load_or_generate_champion_raw() -> pd.DataFrame:
+    raw_parquet = ROOT / "experiments" / "champion_production_raw" / "champion_raw_components.parquet"
+    raw_path = ROOT / "experiments" / "champion_production_raw" / "champion_raw_components.csv.gz"
+    if raw_parquet.exists():
+        print(f"Loading cached verified champion raw components: {raw_parquet.name}...")
+        df_comp = pd.read_parquet(raw_parquet)
+        assert len(df_comp) == 79101
+        return df_comp
+    if raw_path.exists():
+        print(f"Loading cached verified champion raw components: {raw_path.name}...")
+        df_comp = pd.read_csv(raw_path)
+        assert len(df_comp) == 79101
+        return df_comp
+
+    print("Cached champion raw not found. Running full inference pipeline to recover raw components...")
+    sales_file = ROOT / "sales_dataset_hakaton_train.csv"
+    stock_file = ROOT / "stock_dataset_hakaton_train.csv"
+    bundle_dir = ROOT / "forecast-container" / "model"
+
+    sales_df = pd.read_csv(sales_file)
+    sales_df["date"] = pd.to_datetime(sales_df["date"])
+    sales_df = sales_df[sales_df["date"] <= pd.Timestamp("2026-07-26")].copy()
+
+    stock_df = pd.read_csv(stock_file)
+    stock_df["date"] = pd.to_datetime(stock_df["date"])
+    stock_df = stock_df[stock_df["date"] <= pd.Timestamp("2026-07-26")].copy()
+
+    df_comp = predict_from_history(sales_df, stock_df, bundle_dir=bundle_dir, return_raw=True)
+    assert len(df_comp) == 79101
+
+    raw_path.parent.mkdir(parents=True, exist_ok=True)
+    df_comp.to_csv(raw_path, index=False, compression="gzip")
+    return df_comp
 
 
 def main():
@@ -139,13 +191,65 @@ def main():
     out_base.mkdir(parents=True, exist_ok=True)
     ckpt_dir.mkdir(parents=True, exist_ok=True)
 
-    print("=" * 80)
-    print("TIMESTRAL-209M PRODUCTION FULL-HISTORY REFIT (WEEKS 0..133)")
-    print("=" * 80)
+    print("=" * 85)
+    print("TIMESTRAL-209M PRODUCTION REFIT (WEEKS 0..133) & EXACT RAW BLENDING")
+    print("=" * 85)
 
-    # 1. Load Data
+    # 1. Verify Control Champion Submission (STRICTLY NO FALLBACK)
+    champ_sub_path = ROOT / "delivery_final" / "submission.csv"
+    assert champ_sub_path.exists(), f"Primary champion submission missing: {champ_sub_path}"
+    champ_bytes = champ_sub_path.read_bytes()
+    champ_crlf_sha = sha256_bytes(champ_bytes)
+    champ_lf_sha = sha256_bytes(champ_bytes.replace(b"\r\n", b"\n"))
+    print(f"\n1. Verifying Control Champion Submission: {champ_sub_path.relative_to(ROOT)}")
+    print(f"   Size: {len(champ_bytes):,} bytes | CRLF SHA256: {champ_crlf_sha} | LF SHA256: {champ_lf_sha}")
+    assert champ_crlf_sha == CONTROL_SHA256_CRLF or champ_lf_sha == CONTROL_SHA256_LF, (
+        f"Control submission hash mismatch! Got CRLF={champ_crlf_sha}, LF={champ_lf_sha}"
+    )
+    df_champ_sub = pd.read_csv(champ_sub_path)
+    assert len(df_champ_sub) == 79101, f"Expected 79,101 rows, got {len(df_champ_sub)}"
+    assert not df_champ_sub.duplicated(subset=KEYS).any(), "Duplicate keys in control submission!"
+    print("   [PASS] Control champion submission verified 100% against official SHA256 manifest.")
+
+    # 2. Recover Champion Raw Components via Inference Pipeline
+    print("\n2. Recovering Continuous Champion Raw Components...")
+    df_champ_components = load_or_generate_champion_raw()
+    comp_tft = df_champ_components["raw_tft"].to_numpy(dtype=np.float64)
+    comp_lgb = df_champ_components["raw_lgb"].to_numpy(dtype=np.float64)
+    comp_cb = df_champ_components["raw_cb"].to_numpy(dtype=np.float64)
+    comp_pcat = df_champ_components["raw_pcat"].to_numpy(dtype=np.float64)
+    raw_champion = df_champ_components["raw_champion"].to_numpy(dtype=np.float64)
+
+    expected_raw = 0.45 * comp_tft + 0.37 * comp_lgb + 0.09 * comp_cb + 0.09 * comp_pcat
+    comp_diff = np.max(np.abs(raw_champion - expected_raw))
+    print(f"   Component formula check: max |raw_champion - sum(w_i * comp_i)| = {comp_diff:.8e}")
+    assert comp_diff < 1e-4, f"Component formula discrepancy: {comp_diff}"
+
+    # 3. Assert Zero-Weight Test (w = 0)
+    print("\n3. Executing Mandatory Zero-Weight Test (w = 0.0)...")
+    reproduced_q_w0 = apply_p(raw_champion, 1.05, 0.65)
+    merged_ctrl = pd.merge(
+        df_champ_sub[KEYS + ["quantity"]],
+        df_champ_components[KEYS].assign(quantity_w0=reproduced_q_w0),
+        on=KEYS,
+        how="inner",
+        validate="one_to_one",
+    )
+    assert len(merged_ctrl) == 79101, "Merge key alignment failed!"
+    abs_delta_w0 = np.abs(merged_ctrl["quantity"].values - merged_ctrl["quantity_w0"].values)
+    max_delta_w0 = int(abs_delta_w0.max())
+    diff_count_w0 = int((abs_delta_w0 != 0).sum())
+
+    print(f"   Zero-weight test results:")
+    print(f"     Rows evaluated: {len(merged_ctrl):,}")
+    print(f"     Different rows: {diff_count_w0}")
+    print(f"     Max absolute difference: {max_delta_w0}")
+    assert max_delta_w0 == 0, f"MANDATORY TEST FAILURE: blend(w=0) differs from control by {max_delta_w0}!"
+    print("   [PASS] Zero-weight test PASSED: 100% identity to delivery_final/submission.csv (diff = 0).")
+
+    # 4. Load Data & Prepare Sampler
+    print("\n4. Loading Historical Panel (Weeks 0..133)...")
     data_path = ROOT / "weekly_data" / "weekly_dataset.csv.gz"
-    print(f"Loading historical weekly dataset: {data_path.name}...")
     df_raw = pd.read_csv(data_path, parse_dates=["week"])
     df_piv = df_raw.pivot(index="week", columns=["warehouse_name", "article"], values="quantity").fillna(0.0)
     panel = df_piv.values.astype(np.float32)  # (134, 8789)
@@ -153,27 +257,28 @@ def main():
     pairs = df_piv.columns.to_frame(index=False)
     n_weeks, n_series = panel.shape
 
-    print(f"Panel shape: {n_weeks} weeks x {n_series} series")
-    print(f"Weeks span: {weeks[0].strftime('%Y-%m-%d')} to {weeks[-1].strftime('%Y-%m-%d')}")
+    print(f"   Panel shape: {n_weeks} weeks x {n_series} series")
+    print(f"   Historical weeks span: {weeks[0].strftime('%Y-%m-%d')} to {weeks[-1].strftime('%Y-%m-%d')}")
 
-    # 2. Setup Sampler
     sampler = StratifiedWindowSamplerFullHistory(panel, seed=42)
-    print(f"Valid full-history training origins: {len(sampler.valid_origins)} origins (origins {sampler.valid_origins[0]}..{sampler.valid_origins[-1]})")
-    print(f"Zero future leakage verified: latest origin {sampler.valid_origins[-1]} target window ends at week {sampler.valid_origins[-1] + HORIZON - 1} <= {n_weeks - 1}")
+    print(f"   Valid origins count: {len(sampler.valid_origins)} (origins {sampler.valid_origins[0]}..{sampler.valid_origins[-1]})")
+    print(f"   Zero future leakage verified: latest origin {sampler.valid_origins[-1]} target ends at week {sampler.valid_origins[-1] + HORIZON - 1} <= {n_weeks - 1}")
 
-    # 3. Model Setup
+    # 5. Initialize Model from Original Untouched Pretrained Weights
+    print("\n5. Initializing Timestral-209M from Pretrained Weights...")
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device} ({torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'})")
+    print(f"   Using device: {device} ({torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'})")
 
     model_dir = ROOT / "experiments" / "urgent_models" / "timestral_209m"
     forecaster = TimestralForecaster.from_pretrained(str(model_dir))
     model = forecaster.model.to(device)
 
+    # EXACT CV HYPERPARAMETERS
     lora_config = LoraConfig(
         r=8,
         lora_alpha=16,
         target_modules=["wQKV", "wO"],
-        lora_dropout=0.0,
+        lora_dropout=0.05,  # Exactly aligned with CV
         bias="none",
     )
     model = get_peft_model(model, lora_config)
@@ -181,20 +286,31 @@ def main():
 
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     total_params = sum(p.numel() for p in model.parameters())
-    print(f"LoRA initialized: {trainable_params:,} trainable / {total_params:,} total parameters ({trainable_params / total_params * 100:.2f}%)")
+    print(f"   LoRA Config: r=8, alpha=16, modules=['wQKV', 'wO'], dropout=0.05")
+    print(f"   Trainable params: {trainable_params:,} / {total_params:,} ({trainable_params / total_params * 100:.2f}%)")
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=0.01)
+    # Optimizer & LR Scheduler: AdamW 1e-4, weight_decay 1e-4, 30 warmup steps + cosine
+    total_steps = 600
+    warmup_steps = 30
+    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-4)
+
+    def lr_lambda(step: int) -> float:
+        if step < warmup_steps:
+            return float(step + 1) / float(max(1, warmup_steps))
+        progress = float(step - warmup_steps) / float(max(1, total_steps - warmup_steps))
+        return max(0.01, 0.5 * (1.0 + math.cos(math.pi * progress)))
+
+    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
     q_tensor = torch.tensor(QUANTILES, dtype=torch.float32, device=device)
 
-    # 4. Training Loop
-    total_steps = 600
+    # 6. Training Loop
     microbatch = 32
     grad_accum = 2
     step = 0
     t_start = time.perf_counter()
     running_loss = 0.0
 
-    print(f"\nStarting 600-step training loop (microbatch={microbatch}, grad_accum={grad_accum}, effective={microbatch * grad_accum})...")
+    print(f"\n6. Starting {total_steps}-step LoRA Training Loop (microbatch={microbatch}, grad_accum={grad_accum}, effective={microbatch * grad_accum})...")
     optimizer.zero_grad()
 
     while step < total_steps:
@@ -217,6 +333,7 @@ def main():
 
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         optimizer.step()
+        scheduler.step()
         optimizer.zero_grad()
 
         running_loss += step_loss
@@ -225,25 +342,25 @@ def main():
         if step % 50 == 0:
             avg_loss = running_loss / 50.0
             elapsed = time.perf_counter() - t_start
-            print(f"  Step {step:03d}/{total_steps} | Avg Pinball Loss: {avg_loss:.4f} | Elapsed: {elapsed:.1f} s", flush=True)
+            current_lr = scheduler.get_last_lr()[0]
+            print(f"   Step {step:03d}/{total_steps} | Pinball Loss: {avg_loss:.4f} | LR: {current_lr:.6e} | Elapsed: {elapsed:.1f} s", flush=True)
             running_loss = 0.0
 
     train_time = time.perf_counter() - t_start
-    print(f"\nTraining completed in {train_time:.1f} s ({train_time / 60:.2f} min)")
+    print(f"\n   Training completed in {train_time:.1f} s ({train_time / 60:.2f} min)")
 
-    # 5. Save Adapter
-    print(f"\nSaving final refit adapter to: {ckpt_dir}...")
+    # 7. Save Refit Adapter
+    print(f"\n7. Saving final refit adapter to: {ckpt_dir}...")
     model.save_pretrained(str(ckpt_dir))
     adapter_file = ckpt_dir / "adapter_model.safetensors"
     adapter_sha = sha256_file(adapter_file)
-    print(f"Saved {adapter_file.name}: {adapter_file.stat().st_size:,} bytes | SHA256: {adapter_sha}")
+    print(f"   Saved {adapter_file.name}: {adapter_file.stat().st_size:,} bytes | SHA256: {adapter_sha}")
 
-    # 6. Future Forecast Generation
-    print("\nGenerating Future 9-Week Forecast (Weeks 2026-07-27 .. 2026-09-21)...")
+    # 8. Future Forecast Generation (Weeks 2026-07-27 .. 2026-09-21)
+    print("\n8. Generating Future 9-Week Forecast (Weeks 2026-07-27 .. 2026-09-21)...")
     forecaster.model = model
     forecaster.model.eval()
 
-    # Context: weeks 82..133 (52 weeks)
     inf_ctx = panel[-CONTEXT:, :].T  # (8789, 52)
     inf_batch_size = 64
     all_preds_med = []
@@ -260,12 +377,11 @@ def main():
                 all_preds_q[q].append(qv)
 
     continuous_preds = np.vstack(all_preds_med)  # (8789, 9)
-    quantiles_arr = {q: np.vstack(all_preds_q[q]) for q in QUANTILES}  # each (8789, 9)
+    quantiles_arr = {q: np.vstack(all_preds_q[q]) for q in QUANTILES}
     rint_preds = np.rint(continuous_preds).clip(0, None)
     legacy_p_preds = apply_p(continuous_preds, 1.05, 0.65)
 
-    # Format keyed DataFrame
-    print("Formatting keyed predictions...")
+    print("   Formatting keyed future predictions...")
     rows = []
     for h_idx, w_str in enumerate(FUTURE_WEEKS):
         df_h = pairs.copy()
@@ -286,57 +402,121 @@ def main():
     future_csv = out_base / "timestral_209m_future_9w_keyed.csv.gz"
     future_df.to_csv(future_csv, index=False, compression="gzip")
     future_sha = sha256_file(future_csv)
-    print(f"Saved keyed future predictions: {future_csv.name} ({future_csv.stat().st_size:,} bytes | SHA256: {future_sha})")
+    print(f"   Saved keyed future predictions: {future_csv.name} ({future_csv.stat().st_size:,} bytes | SHA256: {future_sha})")
 
-    # 7. Create Blended Candidate Submission
-    champ_sub_path = ROOT / "submissions" / "submission_final_pumpline.csv"
-    if not champ_sub_path.exists():
-        champ_sub_path = ROOT / "delivery_final" / "submission.csv"
+    # 9. Blending with Champion Raw (Honest CV Recipe)
+    print("\n9. Generating Production Candidate Submissions (w=0.05, w=0.10)...")
+    merged_comp = pd.merge(
+        df_champ_components[KEYS + ["raw_champion"]],
+        future_df[KEYS + ["y_pred_continuous"]],
+        on=KEYS,
+        how="inner",
+        validate="one_to_one",
+    )
+    assert len(merged_comp) == 79101, "Merge mismatch during blending!"
 
-    print(f"\nCreating Blended Candidate Submission against: {champ_sub_path.name}...")
-    df_champ_sub = pd.read_csv(champ_sub_path)
-    merged_sub = pd.merge(df_champ_sub[KEYS + ["quantity"]], future_df[KEYS + ["y_pred_continuous"]], on=KEYS, validate="one_to_one")
-    assert len(merged_sub) == 79101
+    raw_champ = merged_comp["raw_champion"].values.astype(np.float64)
+    raw_tim = merged_comp["y_pred_continuous"].values.astype(np.float64)
 
-    raw_champ = merged_sub["quantity"].astype(np.float64).values
-    raw_tim = merged_sub["y_pred_continuous"].values
+    candidate_paths = {}
+    candidate_meta = {}
 
     for w_blend in [0.05, 0.10]:
+        # Exact CV formula: final = apply_p((1 - w)*raw_champion + w*raw_timestral, 1.05, 0.65)
         raw_blend = (1.0 - w_blend) * raw_champ + w_blend * raw_tim
-        final_blend = apply_p(raw_blend, 1.05, 0.65).astype(int)
+        final_blend = apply_p(raw_blend, 1.05, 0.65)
 
-        sub_candidate = merged_sub[KEYS].copy()
+        sub_candidate = merged_comp[KEYS].copy()
         sub_candidate["quantity"] = final_blend
 
         sub_file = ROOT / "submissions" / f"submission_champion_timestral_refit_blend_w{int(w_blend * 100):02d}.csv"
-        sub_candidate.to_csv(sub_file, index=False)
-        sub_sha = sha256_file(sub_file)
-        print(f"  Candidate Submission (w={w_blend:.2f}) saved: {sub_file.name} ({sub_file.stat().st_size:,} bytes | SHA256: {sub_sha})")
+        # Write with CRLF to match submission standard on Windows
+        sub_candidate.to_csv(sub_file, index=False, lineterminator="\r\n")
+        raw_bytes = sub_file.read_bytes()
+        lf_bytes = raw_bytes.replace(b"\r\n", b"\n")
+        crlf_sha = sha256_bytes(raw_bytes)
+        lf_sha = sha256_bytes(lf_bytes)
 
-    # 8. Manifest & Results Summary
+        candidate_paths[f"w{int(w_blend * 100):02d}"] = str(sub_file)
+        candidate_meta[f"w{int(w_blend * 100):02d}"] = {
+            "path": str(sub_file.relative_to(ROOT)),
+            "weight_timestral": w_blend,
+            "weight_champion": 1.0 - w_blend,
+            "rows": len(sub_candidate),
+            "quantity_sum": int(sub_candidate["quantity"].sum()),
+            "crlf_bytes": len(raw_bytes),
+            "crlf_sha256": crlf_sha,
+            "lf_bytes": len(lf_bytes),
+            "lf_sha256": lf_sha,
+        }
+        print(f"   Candidate (w={w_blend:.2f}) saved: {sub_file.name}")
+        print(f"     CRLF: {len(raw_bytes):,} bytes | SHA256: {crlf_sha}")
+        print(f"     LF:   {len(lf_bytes):,} bytes | SHA256: {lf_sha}")
+        print(f"     Quantity sum: {int(sub_candidate['quantity'].sum()):,}")
+
+    # 10. Write Complete Production Summary & Manifest
     summary = {
         "model_id": "mistralai/Timestral-209M",
         "training_mode": "Production Full-History Refit (Weeks 0..133)",
-        "total_historical_weeks": n_weeks,
-        "n_series": n_series,
-        "valid_origins_count": len(sampler.valid_origins),
-        "steps": total_steps,
-        "learning_rate": 1e-4,
-        "lora_rank": 8,
-        "lora_alpha": 16,
-        "trainable_parameters": trainable_params,
-        "training_time_sec": train_time,
+        "recipe_alignment": "100% Exact Cross-Validation Recipe Match",
+        "hyperparameters": {
+            "lora_rank": 8,
+            "lora_alpha": 16,
+            "target_modules": ["wQKV", "wO"],
+            "lora_dropout": 0.05,
+            "learning_rate": 1e-4,
+            "weight_decay": 1e-4,
+            "warmup_steps": 30,
+            "lr_schedule": "warmup_cosine_decay",
+            "total_steps": total_steps,
+            "microbatch_size": microbatch,
+            "grad_accum_steps": grad_accum,
+            "effective_batch_size": microbatch * grad_accum,
+            "loss": "masked_pinball_loss_21_quantiles",
+            "grad_clip_norm": 1.0,
+            "seed": 42,
+        },
+        "training_scope": {
+            "total_historical_weeks": n_weeks,
+            "n_series": n_series,
+            "valid_origins_count": len(sampler.valid_origins),
+            "valid_origins": [sampler.valid_origins[0], sampler.valid_origins[-1]],
+            "future_leakage_points": 0,
+        },
+        "champion_control": {
+            "path": "delivery_final/submission.csv",
+            "crlf_sha256": champ_crlf_sha,
+            "lf_sha256": champ_lf_sha,
+            "zero_weight_test_status": "PASSED_BIT_EXACT_ZERO_DIFF",
+            "zero_weight_max_abs_diff": max_delta_w0,
+            "zero_weight_different_rows": diff_count_w0,
+        },
         "adapter_safetensors_sha256": adapter_sha,
         "future_predictions_sha256": future_sha,
-        "future_weeks": FUTURE_WEEKS,
-        "rows": 79101,
+        "adapter_artifacts": {
+            "adapter_model_safetensors_path": str(adapter_file.relative_to(ROOT)),
+            "adapter_model_safetensors_bytes": adapter_file.stat().st_size,
+            "adapter_model_safetensors_sha256": adapter_sha,
+        },
+        "future_predictions": {
+            "keyed_csv_path": str(future_csv.relative_to(ROOT)),
+            "keyed_csv_bytes": future_csv.stat().st_size,
+            "keyed_csv_sha256": future_sha,
+            "future_weeks": FUTURE_WEEKS,
+            "rows": 79101,
+        },
+        "candidates": candidate_meta,
+        "training_time_sec": train_time,
     }
-    with open(out_base / "production_refit_summary.json", "w", encoding="utf-8") as f:
-        json.dump(summary, f, indent=2)
 
-    print("\n" + "=" * 80)
-    print("PRODUCTION FULL-HISTORY REFIT COMPLETED SUCCESSFULLY!")
-    print("=" * 80)
+    summary_file = out_base / "production_refit_summary.json"
+    with open(summary_file, "w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2)
+    print(f"\nSaved production summary: {summary_file.name}")
+
+    print("\n" + "=" * 85)
+    print("PRODUCTION FULL-HISTORY REFIT & BLENDING COMPLETED WITH ZERO ERRORS!")
+    print("=" * 85)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,38 @@
+{
+  "delivery_final/submission.csv": {
+    "file": "delivery_final\\submission.csv",
+    "total_lines": 79102,
+    "data_rows": 79101,
+    "delta_bytes": 79102,
+    "size_crlf_bytes": 3798927,
+    "sha256_crlf": "09cd97d4dc930a5280bb93ae249f01ded35d755fff9b276a35e7473359022939",
+    "size_lf_bytes": 3719825,
+    "sha256_lf": "ef658d22e8f8f685c6d9d0041c18854a06a900f9ef014368c0fddd70006647d0",
+    "git_blob_size_bytes": 3719825,
+    "pandas_numerical_identity": true
+  },
+  "submissions/submission_champion_timestral_refit_blend_w05.csv": {
+    "file": "submissions\\submission_champion_timestral_refit_blend_w05.csv",
+    "total_lines": 79102,
+    "data_rows": 79101,
+    "delta_bytes": 79102,
+    "size_crlf_bytes": 3798914,
+    "sha256_crlf": "00c78908798796d66b3ba995e2d3d6c8355960611934a000c0ba3595288aa047",
+    "size_lf_bytes": 3719812,
+    "sha256_lf": "f65d538ed1ef538939520d3a688211fabeb5ffb00ae5ffaa2ab51d922715750f",
+    "git_blob_size_bytes": 3719812,
+    "pandas_numerical_identity": true
+  },
+  "submissions/submission_champion_timestral_refit_blend_w10.csv": {
+    "file": "submissions\\submission_champion_timestral_refit_blend_w10.csv",
+    "total_lines": 79102,
+    "data_rows": 79101,
+    "delta_bytes": 79102,
+    "size_crlf_bytes": 3798886,
+    "sha256_crlf": "0b8e3f5c9aca9155d49535b9500719cc70bb5bb1615fcecd053fceeff7a74db1",
+    "size_lf_bytes": 3719784,
+    "sha256_lf": "dc30eb7cf9cc5d487707d98078aca39425516796599a107f5fd11ea300f5f195",
+    "git_blob_size_bytes": 3719784,
+    "pandas_numerical_identity": true
+  }
+}

@@ -1,27 +1,92 @@
 {
   "model_id": "mistralai/Timestral-209M",
   "training_mode": "Production Full-History Refit (Weeks 0..133)",
-  "total_historical_weeks": 134,
-  "n_series": 8789,
-  "valid_origins_count": 74,
-  "steps": 600,
-  "learning_rate": 0.0001,
-  "lora_rank": 8,
-  "lora_alpha": 16,
-  "trainable_parameters": 1105920,
-  "training_time_sec": 420.53912010000204,
-  "adapter_safetensors_sha256": "807d4035ae7fd8e6288f732290925c34683741c801c6acb0f32a52c7d06e063d",
-  "future_predictions_sha256": "5a005e122acfa3e00f4807eaac37e528cc717e22c845fad99e2c6ea69e9a98e1",
-  "future_weeks": [
-    "2026-07-27",
-    "2026-08-03",
-    "2026-08-10",
-    "2026-08-17",
-    "2026-08-24",
-    "2026-08-31",
-    "2026-09-07",
-    "2026-09-14",
-    "2026-09-21"
-  ],
-  "rows": 79101
+  "recipe_alignment": "100% Exact Cross-Validation Recipe Match",
+  "hyperparameters": {
+    "lora_rank": 8,
+    "lora_alpha": 16,
+    "target_modules": [
+      "wQKV",
+      "wO"
+    ],
+    "lora_dropout": 0.05,
+    "learning_rate": 0.0001,
+    "weight_decay": 0.0001,
+    "warmup_steps": 30,
+    "lr_schedule": "warmup_cosine_decay",
+    "total_steps": 600,
+    "microbatch_size": 32,
+    "grad_accum_steps": 2,
+    "effective_batch_size": 64,
+    "loss": "masked_pinball_loss_21_quantiles",
+    "grad_clip_norm": 1.0,
+    "seed": 42
+  },
+  "training_scope": {
+    "total_historical_weeks": 134,
+    "n_series": 8789,
+    "valid_origins_count": 74,
+    "valid_origins": [
+      52,
+      125
+    ],
+    "future_leakage_points": 0
+  },
+  "champion_control": {
+    "path": "delivery_final/submission.csv",
+    "crlf_sha256": "09cd97d4dc930a5280bb93ae249f01ded35d755fff9b276a35e7473359022939",
+    "lf_sha256": "ef658d22e8f8f685c6d9d0041c18854a06a900f9ef014368c0fddd70006647d0",
+    "zero_weight_test_status": "PASSED_BIT_EXACT_ZERO_DIFF",
+    "zero_weight_max_abs_diff": 0,
+    "zero_weight_different_rows": 0
+  },
+  "adapter_artifacts": {
+    "adapter_model_safetensors_path": "experiments\\timestral_production_model\\refit_full_history\\checkpoints\\final_refit\\adapter_model.safetensors",
+    "adapter_model_safetensors_bytes": 4439480,
+    "adapter_model_safetensors_sha256": "fc052a211156ac47c9c32557185432bac58fda9099db9fd6400620189ea761ec"
+  },
+  "future_predictions": {
+    "keyed_csv_path": "experiments\\timestral_production_model\\refit_full_history\\timestral_209m_future_9w_keyed.csv.gz",
+    "keyed_csv_bytes": 6678921,
+    "keyed_csv_sha256": "5117084cc50f537deed5edc7e676a2734489c10c6ac7017b7edbeba9e743a312",
+    "future_weeks": [
+      "2026-07-27",
+      "2026-08-03",
+      "2026-08-10",
+      "2026-08-17",
+      "2026-08-24",
+      "2026-08-31",
+      "2026-09-07",
+      "2026-09-14",
+      "2026-09-21"
+    ],
+    "rows": 79101
+  },
+  "candidates": {
+    "w05": {
+      "path": "submissions\\submission_champion_timestral_refit_blend_w05.csv",
+      "weight_timestral": 0.05,
+      "weight_champion": 0.95,
+      "rows": 79101,
+      "quantity_sum": 215841,
+      "crlf_bytes": 3798914,
+      "crlf_sha256": "00c78908798796d66b3ba995e2d3d6c8355960611934a000c0ba3595288aa047",
+      "lf_bytes": 3719812,
+      "lf_sha256": "f65d538ed1ef538939520d3a688211fabeb5ffb00ae5ffaa2ab51d922715750f"
+    },
+    "w10": {
+      "path": "submissions\\submission_champion_timestral_refit_blend_w10.csv",
+      "weight_timestral": 0.1,
+      "weight_champion": 0.9,
+      "rows": 79101,
+      "quantity_sum": 215157,
+      "crlf_bytes": 3798886,
+      "crlf_sha256": "0b8e3f5c9aca9155d49535b9500719cc70bb5bb1615fcecd053fceeff7a74db1",
+      "lf_bytes": 3719784,
+      "lf_sha256": "dc30eb7cf9cc5d487707d98078aca39425516796599a107f5fd11ea300f5f195"
+    }
+  },
+  "training_time_sec": 504.296285599994,
+  "adapter_safetensors_sha256": "fc052a211156ac47c9c32557185432bac58fda9099db9fd6400620189ea761ec",
+  "future_predictions_sha256": "5117084cc50f537deed5edc7e676a2734489c10c6ac7017b7edbeba9e743a312"
 }
