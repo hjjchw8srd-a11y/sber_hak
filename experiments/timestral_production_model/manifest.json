@@ -1,0 +1,82 @@
+{
+  "model_name": "mistralai/Timestral-209M",
+  "base_weights_sha256": "1456effb9927e3daa8c7234f10497e3424233869245a9c72b8ecebaf7ad2b7fa",
+  "dataset_sha256": "dfb461c3f313fdcc148ff882f8504b422f59f2974ac3b7290bdf4611357b6fe6",
+  "architecture": {
+    "lora_rank": 8,
+    "lora_alpha": 16,
+    "target_modules": ["wQKV", "wO"],
+    "trainable_parameters": 1105920,
+    "total_parameters": 210418176,
+    "trainable_pct": 0.525582
+  },
+  "temporal_protocol": {
+    "context_weeks": 52,
+    "horizon_weeks": 9,
+    "total_historical_weeks": 134,
+    "training_origins_span": [52, 125],
+    "future_leakage": 0.0
+  },
+  "five_fold_metrics": {
+    "timestral_zero_shot": {
+      "mean_clipped_score": 0.742855,
+      "mean_unclipped_ratio": 0.774247,
+      "mean_wape": 50.551,
+      "mean_rmse": 2.9891
+    },
+    "timestral_lora_rint": {
+      "mean_clipped_score": 0.737565,
+      "mean_unclipped_ratio": 0.764253,
+      "mean_smape": 63.162,
+      "mean_wape": 49.881,
+      "mean_rmse": 2.9276,
+      "mean_bias": 76.14,
+      "mean_rmsle": 0.5315
+    },
+    "timestral_lora_legacy_p": {
+      "mean_clipped_score": 0.737766,
+      "mean_unclipped_ratio": 0.767787,
+      "mean_smape": 62.944,
+      "mean_wape": 50.231,
+      "mean_rmse": 2.9447,
+      "mean_bias": 77.02,
+      "mean_rmsle": 0.5368
+    },
+    "champion_scale_1m_dual": {
+      "mean_clipped_score": 0.728728,
+      "mean_unclipped_ratio": 0.753387,
+      "mean_smape": 61.898,
+      "mean_wape": 49.409,
+      "mean_rmse": 2.8784
+    },
+    "champion_timestral_blend_w10": {
+      "mean_clipped_score": 0.728249,
+      "mean_unclipped_ratio": 0.752665,
+      "delta_clipped_vs_champion": -0.000479,
+      "mean_smape": 61.904,
+      "mean_wape": 49.316,
+      "mean_rmse": 2.8723
+    }
+  },
+  "production_refit": {
+    "training_time_sec": 420.5,
+    "adapter_model_safetensors_sha256": "807d4035ae7fd8e6288f732290925c34683741c801c6acb0f32a52c7d06e063d",
+    "adapter_size_bytes": 4439480,
+    "future_predictions_keyed_sha256": "5a005e122acfa3e00f4807eaac37e528cc717e22c845fad99e2c6ea69e9a98e1",
+    "reload_parity_verified": true,
+    "reload_max_abs_diff": 1.93896484e-05,
+    "reload_mean_abs_diff": 1.42488142e-07
+  },
+  "candidate_submissions": {
+    "blend_w05": {
+      "file": "submissions/submission_champion_timestral_refit_blend_w05.csv",
+      "sha256": "d9014f9ba9e7481ea197e914e4588dc3a8402ee4ee39d0e0a94c671023909fcd",
+      "size_bytes": 3798739
+    },
+    "blend_w10": {
+      "file": "submissions/submission_champion_timestral_refit_blend_w10.csv",
+      "sha256": "017fef29bdc8e70de645055c8a0de8ebb0acfa621ede1d761aa1ac3e20f45658",
+      "size_bytes": 3798754
+    }
+  }
+}

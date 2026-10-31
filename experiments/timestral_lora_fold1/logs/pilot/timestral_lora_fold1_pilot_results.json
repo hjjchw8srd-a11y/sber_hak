@@ -1,0 +1,260 @@
+{
+  "experiment_name": "timestral_209m_lora_fold1_pilot",
+  "fold": 1,
+  "origin": 116,
+  "run_id": "pilot",
+  "weights_sha256": "1456effb9927e3daa8c7234f10497e3424233869245a9c72b8ecebaf7ad2b7fa",
+  "dataset_sha256": "dfb461c3f313fdcc148ff882f8504b422f59f2974ac3b7290bdf4611357b6fe6",
+  "keyed_predictions_sha256": "40d1880e9b178da89cb2143845cd6b66599089bde24b030d748def9804371227",
+  "training_time_sec": 563.2718003999908,
+  "peak_vram_mb": 991.00341796875,
+  "best_checkpoint": {
+    "step": 600,
+    "path": "experiments\\timestral_lora_fold1\\checkpoints\\pilot\\step_600",
+    "internal_val_unclipped": 0.7611135681948704
+  },
+  "coverage_statistics": {
+    "total_windows_sampled": 38400,
+    "unique_windows_seen": 36511,
+    "unique_possible_windows": 413083,
+    "window_coverage_pct": 8.838659542997412,
+    "unique_series_seen": 8600,
+    "series_coverage_pct": 97.84958470815792,
+    "unique_origins_seen": 47,
+    "origins_coverage_pct": 100.0,
+    "repeat_rate_pct": 4.919270833333334,
+    "target_zero_rate_pct": 56.193576388888886,
+    "target_mean_volume": 2.6022887731481483
+  },
+  "internal_validation_checkpoints": [
+    {
+      "step": 150,
+      "train_loss": 0.355228990316391,
+      "lr": 8.945702546981969e-05,
+      "internal_val_eval_sec": 21.024564499995904,
+      "internal_val_rint": {
+        "clipped_score": 0.7390445525520382,
+        "unclipped_ratio": 0.7573003198831728,
+        "smape": 63.377354228210535,
+        "wape": 49.491205530226374,
+        "rmse": 2.5060576916577846,
+        "bias": 75.99100429626542,
+        "rmsle": 0.5278575320603972
+      },
+      "internal_val_legacy_p": {
+        "clipped_score": 0.7414553275314533,
+        "unclipped_ratio": 0.7656903556459003,
+        "smape": 63.314532916669435,
+        "wape": 50.20408627335053,
+        "rmse": 2.566159760096274,
+        "bias": 77.16143227158018,
+        "rmsle": 0.5337629327635885
+      },
+      "checkpoint_path": "C:\\Users\\lenya\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\hak\\experiments\\timestral_lora_fold1\\checkpoints\\pilot\\step_150"
+    },
+    {
+      "step": 300,
+      "train_loss": 0.331951804459095,
+      "lr": 5.4128967273616625e-05,
+      "internal_val_eval_sec": 21.321386199997505,
+      "internal_val_rint": {
+        "clipped_score": 0.7381566623645973,
+        "unclipped_ratio": 0.7543415307647888,
+        "smape": 63.32962713978961,
+        "wape": 49.30474230554955,
+        "rmse": 2.4848563475839183,
+        "bias": 75.66835227343888,
+        "rmsle": 0.524808201880144
+      },
+      "internal_val_legacy_p": {
+        "clipped_score": 0.7404153414489644,
+        "unclipped_ratio": 0.7632319099254268,
+        "smape": 63.18441070750104,
+        "wape": 50.0653758257251,
+        "rmse": 2.548834054470962,
+        "bias": 77.10460836291618,
+        "rmsle": 0.5309124539021182
+      },
+      "checkpoint_path": "C:\\Users\\lenya\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\hak\\experiments\\timestral_lora_fold1\\checkpoints\\pilot\\step_300"
+    },
+    {
+      "step": 450,
+      "train_loss": 0.2774921655654907,
+      "lr": 1.6135921418712956e-05,
+      "internal_val_eval_sec": 20.520080799993593,
+      "internal_val_rint": {
+        "clipped_score": 0.736849493818048,
+        "unclipped_ratio": 0.752509933056907,
+        "smape": 63.20992153506699,
+        "wape": 49.180243993951315,
+        "rmse": 2.4744889955156557,
+        "bias": 75.62155292666363,
+        "rmsle": 0.5229176121129061
+      },
+      "internal_val_legacy_p": {
+        "clipped_score": 0.7395806838379223,
+        "unclipped_ratio": 0.761361598666127,
+        "smape": 63.10124842295386,
+        "wape": 49.93121326162837,
+        "rmse": 2.538596015236544,
+        "bias": 76.90777302107033,
+        "rmsle": 0.5296976678936317
+      },
+      "checkpoint_path": "C:\\Users\\lenya\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\hak\\experiments\\timestral_lora_fold1\\checkpoints\\pilot\\step_450"
+    },
+    {
+      "step": 600,
+      "train_loss": 0.5107606053352356,
+      "lr": 1.0000000000000002e-06,
+      "internal_val_eval_sec": 20.073305099998834,
+      "internal_val_rint": {
+        "clipped_score": 0.7368087828445042,
+        "unclipped_ratio": 0.7524587108042499,
+        "smape": 63.207928404061555,
+        "wape": 49.18194945027457,
+        "rmse": 2.4738426276605616,
+        "bias": 75.62172824447885,
+        "rmsle": 0.522810091832023
+      },
+      "internal_val_legacy_p": {
+        "clipped_score": 0.739426705622964,
+        "unclipped_ratio": 0.7611135681948704,
+        "smape": 63.06709186932067,
+        "wape": 49.92666537809966,
+        "rmse": 2.537530083499688,
+        "bias": 76.89717164417497,
+        "rmsle": 0.5295607988923893
+      },
+      "checkpoint_path": "C:\\Users\\lenya\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\hak\\experiments\\timestral_lora_fold1\\checkpoints\\pilot\\step_600"
+    }
+  ],
+  "external_evaluation": {
+    "zero_shot_rint": {
+      "clipped_score": 0.7356571566494391,
+      "unclipped_ratio": 0.7612802024331008,
+      "smape": 62.02685388323458,
+      "wape": 49.392668564351055,
+      "rmse": 2.7618046199865454,
+      "bias": 74.83121175551562,
+      "rmsle": 0.5256554810965324
+    },
+    "zero_shot_legacy_p": {
+      "clipped_score": 0.7392857969220791,
+      "unclipped_ratio": 0.769040312605463,
+      "smape": 61.93988480266991,
+      "wape": 50.028791204015555,
+      "rmse": 2.830274719515197,
+      "bias": 75.6934288470375,
+      "rmsle": 0.5317118119052721
+    },
+    "fine_tuned_raw": {
+      "clipped_score": 0.9293361931897354,
+      "unclipped_ratio": 0.944004395830718,
+      "smape": 110.68576861366282,
+      "wape": 49.332786101699206,
+      "rmse": 2.7165259617648956,
+      "bias": 69.50723353656826,
+      "rmsle": 0.503387982001431
+    },
+    "fine_tuned_rint": {
+      "clipped_score": 0.7312671312079807,
+      "unclipped_ratio": 0.7560347659964028,
+      "smape": 61.78157603236938,
+      "wape": 48.977097412051016,
+      "rmse": 2.7278021677141964,
+      "bias": 74.69092908282691,
+      "rmsle": 0.5195005738503438
+    },
+    "fine_tuned_legacy_p": {
+      "clipped_score": 0.7357461343834933,
+      "unclipped_ratio": 0.7624904435841153,
+      "smape": 61.45190627001573,
+      "wape": 49.61756589383108,
+      "rmse": 2.7907881053698738,
+      "bias": 75.53643981591082,
+      "rmsle": 0.5253645146120612
+    }
+  },
+  "blending_with_ensemble": [
+    {
+      "weight_timestral": 0.0,
+      "clipped": 0.7338664959381823,
+      "unclipped": 0.7584791922250644,
+      "smape": 61.20032939807646,
+      "wape": 49.41711392625106,
+      "rmse": 2.7888191577096597,
+      "bias": 74.39560379388044,
+      "rmsle": 0.5227133146200024
+    },
+    {
+      "weight_timestral": 0.05,
+      "clipped": 0.7334057316348656,
+      "unclipped": 0.7578845576780603,
+      "smape": 61.16191581051176,
+      "wape": 49.3785445774755,
+      "rmse": 2.785846109698277,
+      "bias": 74.35051393289646,
+      "rmsle": 0.5221210203225848
+    },
+    {
+      "weight_timestral": 0.1,
+      "clipped": 0.7328051508480442,
+      "unclipped": 0.7569231496693453,
+      "smape": 61.115402618051114,
+      "wape": 49.3198757089155,
+      "rmse": 2.7822951599239194,
+      "bias": 74.17055456555067,
+      "rmsle": 0.5214613293111788
+    },
+    {
+      "weight_timestral": 0.15,
+      "clipped": 0.7326239652751331,
+      "unclipped": 0.7568641012404967,
+      "smape": 61.130589627344875,
+      "wape": 49.290541274635494,
+      "rmse": 2.7798495453481844,
+      "bias": 74.27463998846683,
+      "rmsle": 0.5209924755602184
+    },
+    {
+      "weight_timestral": 0.2,
+      "clipped": 0.732452101515369,
+      "unclipped": 0.7566461550038367,
+      "smape": 61.132095245269134,
+      "wape": 49.27696051802438,
+      "rmse": 2.7774950868151795,
+      "bias": 74.24472830902855,
+      "rmsle": 0.5210193079971024
+    },
+    {
+      "weight_timestral": 0.3,
+      "clipped": 0.7319119344613902,
+      "unclipped": 0.7560375886212003,
+      "smape": 61.090653088391306,
+      "wape": 49.221007800786595,
+      "rmse": 2.774496234887304,
+      "bias": 74.242223716252,
+      "rmsle": 0.5203874691031741
+    },
+    {
+      "weight_timestral": 0.5,
+      "clipped": 0.7319373383704882,
+      "unclipped": 0.7563197537585258,
+      "smape": 61.12313501244016,
+      "wape": 49.227526563959934,
+      "rmse": 2.7720711029882974,
+      "bias": 74.38188541881263,
+      "rmsle": 0.5206708469676465
+    },
+    {
+      "weight_timestral": 1.0,
+      "clipped": 0.7357461343834933,
+      "unclipped": 0.7624904435910604,
+      "smape": 61.45190627001573,
+      "wape": 49.61756589383108,
+      "rmse": 2.7907881053698738,
+      "bias": 75.5364398201666,
+      "rmsle": 0.5253645146120612
+    }
+  ]
+}

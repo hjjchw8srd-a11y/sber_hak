@@ -1,0 +1,27 @@
+{
+  "model_id": "mistralai/Timestral-209M",
+  "training_mode": "Production Full-History Refit (Weeks 0..133)",
+  "total_historical_weeks": 134,
+  "n_series": 8789,
+  "valid_origins_count": 74,
+  "steps": 600,
+  "learning_rate": 0.0001,
+  "lora_rank": 8,
+  "lora_alpha": 16,
+  "trainable_parameters": 1105920,
+  "training_time_sec": 420.53912010000204,
+  "adapter_safetensors_sha256": "807d4035ae7fd8e6288f732290925c34683741c801c6acb0f32a52c7d06e063d",
+  "future_predictions_sha256": "5a005e122acfa3e00f4807eaac37e528cc717e22c845fad99e2c6ea69e9a98e1",
+  "future_weeks": [
+    "2026-07-27",
+    "2026-08-03",
+    "2026-08-10",
+    "2026-08-17",
+    "2026-08-24",
+    "2026-08-31",
+    "2026-09-07",
+    "2026-09-14",
+    "2026-09-21"
+  ],
+  "rows": 79101
+}
