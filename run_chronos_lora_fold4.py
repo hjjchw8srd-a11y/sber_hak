@@ -107,12 +107,80 @@ def verify_exact_and_unique_keys(truth_df: pd.DataFrame, pred_df: pd.DataFrame, 
         raise ValueError("Integrity error: non-finite (NaN or Inf) values found in predicted quantities!")
 
 
+def load_full_ft_benchmarks(bench_csv: Path, target_fold: int = 4) -> dict:
+    """
+    Dynamically loads verified Full Fine-Tuning benchmark records from CSV:
+    - Verifies fold, variant and uniqueness of records.
+    - Extracts Fold 4 Legacy P and Fold 4 Rint bit-exact metrics.
+    - Computes 5-fold average across folds [0, 1, 2, 3, 4] for Rint.
+    """
+    if not bench_csv.exists():
+        raise FileNotFoundError(f"Missing Full FT benchmark summary CSV: {bench_csv}")
+
+    df_bench = pd.read_csv(bench_csv)
+
+    # 1. Fold 4 Legacy P
+    row_leg = df_bench[(df_bench["fold"] == target_fold) & (df_bench["variant"] == "legacy_p")]
+    if len(row_leg) != 1:
+        raise ValueError(f"Expected exactly 1 record for fold={target_fold}, variant='legacy_p', got {len(row_leg)}")
+    r_leg = row_leg.iloc[0]
+    bench_fold4_leg = {
+        "clipped_score": float(r_leg["clipped_score"]),
+        "unclipped_ratio": float(r_leg["unclipped_ratio"]),
+        "smape": float(r_leg["smape"]),
+        "wape": float(r_leg["wape"]),
+        "rmse": float(r_leg["rmse"]),
+        "bias": float(r_leg["bias"]),
+        "rmsle": float(r_leg["rmsle"]),
+    }
+
+    # 2. Fold 4 Rint
+    row_rint = df_bench[(df_bench["fold"] == target_fold) & (df_bench["variant"] == "rint")]
+    if len(row_rint) != 1:
+        raise ValueError(f"Expected exactly 1 record for fold={target_fold}, variant='rint', got {len(row_rint)}")
+    r_rint = row_rint.iloc[0]
+    bench_fold4_rint = {
+        "clipped_score": float(r_rint["clipped_score"]),
+        "unclipped_ratio": float(r_rint["unclipped_ratio"]),
+        "smape": float(r_rint["smape"]),
+        "wape": float(r_rint["wape"]),
+        "rmse": float(r_rint["rmse"]),
+        "bias": float(r_rint["bias"]),
+        "rmsle": float(r_rint["rmsle"]),
+    }
+
+    # 3. 5-Fold Average Rint
+    rows_5f = df_bench[(df_bench["variant"] == "rint") & (df_bench["fold"].isin([0, 1, 2, 3, 4]))]
+    if len(rows_5f) != 5:
+        raise ValueError(f"Expected exactly 5 folds for 5-fold average, got {len(rows_5f)}")
+    bench_5f_rint = {
+        "clipped_score": float(rows_5f["clipped_score"].mean()),
+        "unclipped_ratio": float(rows_5f["unclipped_ratio"].mean()),
+        "smape": float(rows_5f["smape"].mean()),
+        "wape": float(rows_5f["wape"].mean()),
+        "rmse": float(rows_5f["rmse"].mean()),
+        "bias": float(rows_5f["bias"].mean()),
+        "rmsle": float(rows_5f["rmsle"].mean()),
+    }
+
+    return {
+        "fold4_leg": bench_fold4_leg,
+        "fold4_rint": bench_fold4_rint,
+        "5fold_rint": bench_5f_rint,
+    }
+
+
 def main():
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
+    import argparse
+    parser = argparse.ArgumentParser(description="Chronos-2 LoRA Fine-Tuning Protocol on Fold 4")
+    parser.add_argument("--model", choices=["small", "full"], default="small", help="Model size: 'small' (28M) or 'full' (120M)")
+    args = parser.parse_args()
+
     print("=" * 80)
-    print("CONTROLLED EXPERIMENT: CHRONOS-2 LORA FINE-TUNING (FOLD 4)")
+    print(f"CONTROLLED EXPERIMENT: CHRONOS-2 LORA FINE-TUNING (FOLD 4) - MODEL: {args.model.upper()}")
     print("=" * 80)
 
     # 1. Environment & Library versions
@@ -132,30 +200,33 @@ def main():
     print(f"Accelerate: {accelerate.__version__}")
     print(f"Chronos: {chronos.__version__}")
 
-    # 2. Check full Chronos-2 (120M) vs Chronos-2 Small
-    print("\n--- Checking Model Checkpoints ---")
-    full_weights_dir = ROOT / 'experiments' / 'model_improvements' / 'chronos2_weights'
-    full_safetensors = full_weights_dir / 'model.safetensors'
-    full_available = full_safetensors.exists() and full_safetensors.stat().st_size > 1000
-
-    small_weights_dir = ROOT / 'experiments' / 'urgent_models' / 'chronos2_small'
-    small_safetensors = small_weights_dir / 'model.safetensors'
-    small_available = small_safetensors.exists() and small_safetensors.stat().st_size > 1000
-
-    if full_available:
-        print(f"Full Chronos-2 (120M) found at {full_weights_dir}")
+    # 2. Check Model Weights (Strict protocol: NO fallback when full is requested)
+    print(f"\n--- Checking Selected Model ({args.model.upper()}) Weights ---")
+    if args.model == "full":
+        full_weights_dir = ROOT / 'experiments' / 'model_improvements' / 'chronos2_weights'
+        full_safetensors = full_weights_dir / 'model.safetensors'
+        if not full_safetensors.exists() or full_safetensors.stat().st_size < 1000:
+            raise FileNotFoundError(
+                f"Full Chronos-2 (120M) pretrained weights not found at {full_weights_dir}. "
+                "Automatic fallback to Small is strictly forbidden by protocol."
+            )
         active_weights_dir = full_weights_dir
         model_name = "Chronos-2 (120M)"
-        status_weights = "CONFIRMED_PRETRAINED"
+        model_tag = "chronos2_120m"
+        weights_sha = sha256_file(full_safetensors)
+        print(f"Verified {model_name}: size={full_safetensors.stat().st_size:,} bytes, SHA256={weights_sha}")
+        status_weights = "CONFIRMED_PRETRAINED_FULL_120M"
     else:
-        print(f"Full Chronos-2 (120M) weights missing: NEED_PRETRAINED_WEIGHTS")
-        print(f"Checking Chronos-2 Small fallback at {small_weights_dir}...")
-        assert small_available, "Chronos-2 Small weights also missing!"
+        small_weights_dir = ROOT / 'experiments' / 'urgent_models' / 'chronos2_small'
+        small_safetensors = small_weights_dir / 'model.safetensors'
+        if not small_safetensors.exists() or small_safetensors.stat().st_size < 1000:
+            raise FileNotFoundError(f"Chronos-2 Small weights missing at {small_weights_dir}!")
         active_weights_dir = small_weights_dir
         model_name = "Chronos-2 Small (28M)"
-        small_sha = sha256_file(small_safetensors)
-        print(f"Chronos-2 Small verified: size={small_safetensors.stat().st_size:,} bytes, SHA256={small_sha}")
-        status_weights = "FALLBACK_SMALL_PRETRAINED_VERIFIED"
+        model_tag = "chronos2_small_28m"
+        weights_sha = sha256_file(small_safetensors)
+        print(f"Verified {model_name}: size={small_safetensors.stat().st_size:,} bytes, SHA256={weights_sha}")
+        status_weights = "CONFIRMED_PRETRAINED_SMALL_28M"
 
     # 3. Setup output directories
     out_dir = ROOT / 'experiments' / 'chronos_lora_fold4'
@@ -164,6 +235,11 @@ def main():
     logs_dir = out_dir / 'logs'
     for d in [out_dir, ckpt_dir, keyed_dir, logs_dir]:
         d.mkdir(parents=True, exist_ok=True)
+
+    ckpt_name = f"{model_tag}_lora_fold4_ckpt"
+    keyed_filename = f"{model_tag}_lora_fold4_keyed.csv.gz"
+    json_filename = f"{model_tag}_lora_fold4_results.json"
+    summary_filename = f"{model_tag}_lora_fold4_summary.csv"
 
     # 4. Load Weekly Dataset
     print("\n--- Loading Dataset & Setting Strict Splits ---")
@@ -376,10 +452,11 @@ def main():
     print(f"Integrity check PASSED: exactly {len(keyed_df):,} rows, unique keys, no NaN/inf.")
 
     # Save keyed predictions
-    keyed_filename = "chronos2_small_lora_fold4_keyed.csv.gz"
     keyed_path = keyed_dir / keyed_filename
     keyed_df.to_csv(keyed_path, index=False, compression='gzip')
-    print(f"Keyed predictions saved: {keyed_path} ({keyed_path.stat().st_size:,} bytes)")
+    print(f"Keyed predictions saved: {keyed_path.name} ({keyed_path.stat().st_size:,} bytes)")
+    if args.model == "small" and keyed_filename != "chronos2_small_lora_fold4_keyed.csv.gz":
+        keyed_df.to_csv(keyed_dir / "chronos2_small_lora_fold4_keyed.csv.gz", index=False, compression='gzip')
 
     # 10. Metric Evaluation
     print("\n--- Metric Evaluation ---")
@@ -424,44 +501,18 @@ def main():
         'rmsle': 0.549929,
     }
 
-    # Requirement 3: Exact Full FT metrics
-    # Chronos-2 Small Full Fine-Tuning across all 5 folds (verified benchmark summary)
-    control_small_full_ft_5fold_rint = {
-        'clipped_score': 0.737456,
-        'unclipped_ratio': 0.764913,
-        'smape': 62.949049,
-        'wape': 50.017672,
-        'rmse': 2.930979,
-        'bias': 76.494682,
-        'rmsle': 0.533512,
-    }
-
-    # Fold 4 Chronos-2 Small Full Fine-Tuning
-    control_small_full_ft_fold4_rint = {
-        'clipped_score': 0.742032,
-        'unclipped_ratio': 0.780329,
-        'smape': 65.964056,
-        'wape': 51.423384,
-        'rmse': 3.090069,
-        'bias': 79.379745,
-        'rmsle': 0.558431,
-    }
-    control_small_full_ft_fold4_leg = {
-        'clipped_score': 0.738396,
-        'unclipped_ratio': 0.777740,
-        'smape': 66.037866,
-        'wape': 51.166699,
-        'rmse': 3.024999,
-        'bias': 79.708315,
-        'rmsle': 0.563457,
-    }
+    # Requirement 1 & 3: Dynamic loading of Full FT benchmark records from CSV
+    bench_csv = ROOT / "experiments" / "chronos_finetune" / "chronos2_finetuned_benchmark_summary.csv"
+    ft_benchmarks = load_full_ft_benchmarks(bench_csv, target_fold=FOLD)
+    control_small_full_ft_fold4_leg = ft_benchmarks["fold4_leg"]
+    control_small_full_ft_fold4_rint = ft_benchmarks["fold4_rint"]
+    control_small_full_ft_5fold_rint = ft_benchmarks["5fold_rint"]
 
     # 12. Save Complete Experiment JSON & Summary CSV
     report = {
-        'experiment_name': 'chronos2_lora_fold4_pilot',
+        'experiment_name': f'{model_tag}_lora_fold4',
         'model_loaded': model_name,
         'weights_status': status_weights,
-        'full_120m_status': 'NEED_PRETRAINED_WEIGHTS',
         'fold': FOLD,
         'origin': ORIGIN,
         'external_window': [val_weeks[0], val_weeks[-1]],
@@ -504,14 +555,19 @@ def main():
         },
         'paths': {
             'code': 'run_chronos_lora_fold4.py',
-            'checkpoint': str(ckpt_dir / 'lora_fold4_ckpt'),
-            'keyed_predictions': str(keyed_path),
-            'log_json': str(logs_dir / 'fold4_lora_results.json'),
+            'checkpoint': str(Path('experiments/chronos_lora_fold4/checkpoint') / ckpt_name),
+            'keyed_predictions': str(Path('experiments/chronos_lora_fold4/keyed_predictions') / keyed_filename),
+            'log_json': str(Path('experiments/chronos_lora_fold4/logs') / json_filename),
+            'manifest': 'experiments/chronos_lora_fold4/manifest.json',
         }
     }
 
-    with open(logs_dir / 'fold4_lora_results.json', 'w', encoding='utf-8') as f:
+    # Save primary and alias JSON
+    with open(logs_dir / json_filename, 'w', encoding='utf-8') as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
+    if json_filename != "fold4_lora_results.json":
+        with open(logs_dir / "fold4_lora_results.json", 'w', encoding='utf-8') as f:
+            json.dump(report, f, indent=2, ensure_ascii=False)
 
     summary_rows = []
     for v_name, res in eval_results.items():
@@ -550,9 +606,13 @@ def main():
         'train_sec': None,
         'train_peak_vram_mb': None,
     })
-    pd.DataFrame(summary_rows).to_csv(logs_dir / 'fold4_lora_summary.csv', index=False)
-    print(f"\nResults JSON saved to {logs_dir / 'fold4_lora_results.json'}")
-    print(f"Summary CSV saved to {logs_dir / 'fold4_lora_summary.csv'}")
+
+    pd.DataFrame(summary_rows).to_csv(logs_dir / summary_filename, index=False)
+    if summary_filename != "fold4_lora_summary.csv":
+        pd.DataFrame(summary_rows).to_csv(logs_dir / "fold4_lora_summary.csv", index=False)
+
+    print(f"\nResults JSON saved to {logs_dir / json_filename}")
+    print(f"Summary CSV saved to {logs_dir / summary_filename}")
 
     print("\n" + "=" * 80)
     print("EXPERIMENT COMPLETED SUCCESSFULLY")

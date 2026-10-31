@@ -1,0 +1,123 @@
+{
+  "manifest_name": "chronos2_lora_fold4_audit_manifest",
+  "protocol": "Controlled Chronos-2 LoRA Fine-Tuning Protocol",
+  "created_at": "2026-10-31 22:04:00",
+  "fold": 4,
+  "origin": 89,
+  "seed": 46,
+  "library_versions": {
+    "torch": "2.5.1+cu124",
+    "transformers": "4.47.1",
+    "peft": "0.14.0",
+    "accelerate": "1.2.1",
+    "chronos": "2.0.0",
+    "numpy": "1.26.4",
+    "pandas": "2.2.3"
+  },
+  "checksums": {
+    "dataset_csv_gz": "dfb461c3f313fdcc148ff882f8504b422f59f2974ac3b7290bdf4611357b6fe6",
+    "base_weights_safetensors": "492290ae82bb89f9769e3479ce90b3179de1f33e600c34daa0352531538b23cd",
+    "adapter_safetensors": "9a0e0032dbc93edca8eb01b5c1591e50467cc076f8d7e11af1076294e0c1bde9",
+    "keyed_predictions_csv_gz": "329ec934012c8e7927b54989c48e8be8df45182a994a66218d9e91ae5ac27c02"
+  },
+  "model_config": {
+    "model_name": "Chronos-2 Small (28M)",
+    "base_parameters": 28345888,
+    "trainable_lora_parameters": 411264,
+    "trainable_percentage": 1.4508771078189542,
+    "lora_rank": 8,
+    "lora_alpha": 16,
+    "target_modules": [
+      "output_patch_embedding.output_layer",
+      "self_attention.k",
+      "self_attention.o",
+      "self_attention.q",
+      "self_attention.v"
+    ]
+  },
+  "training_hyperparameters": {
+    "context_length": 52,
+    "prediction_length": 9,
+    "learning_rate": 1e-05,
+    "num_steps": 300,
+    "batch_size": 32,
+    "gradient_accumulation_steps": 2,
+    "effective_batch_size": 64
+  },
+  "temporal_isolation": {
+    "external_evaluation_window": ["2025-09-15", "2025-11-10"],
+    "internal_validation_window": ["2025-07-14", "2025-09-08"],
+    "training_history_end_week": 80,
+    "max_training_target_index": 79,
+    "overlap_percentage": 0.0
+  },
+  "reproduced_metrics_fold4": {
+    "rint": {
+      "clipped_score": 0.7540420245256262,
+      "unclipped_ratio": 0.7969106263363713,
+      "smape": 67.59209237546125,
+      "wape": 52.62250610639172,
+      "rmse": 3.115361585250503,
+      "bias": 80.98634157410895,
+      "rmsle": 0.5774200228969584
+    },
+    "legacy_p": {
+      "clipped_score": 0.7507014989939212,
+      "unclipped_ratio": 0.794129495449061,
+      "smape": 67.67462961290566,
+      "wape": 52.36311955558438,
+      "rmse": 3.056186157146256,
+      "bias": 81.02927141587172,
+      "rmsle": 0.5823409122047997
+    },
+    "continuous_raw": {
+      "clipped_score": 0.985082635884066,
+      "unclipped_ratio": 1.0933540658916487,
+      "smape": 144.64721447775221,
+      "wape": 52.78556807887338,
+      "rmse": 3.1044193811354415,
+      "bias": 76.15295158451504,
+      "rmsle": 0.5545479400921429
+    }
+  },
+  "verified_full_ft_benchmarks": {
+    "fold4_legacy_p": {
+      "clipped_score": 0.7383955401741131,
+      "unclipped_ratio": 0.7777399527037535,
+      "smape": 66.0378659210927,
+      "wape": 51.166699089985514,
+      "rmse": 3.024998771055188,
+      "bias": 79.70831525246923,
+      "rmsle": 0.5634566929359659
+    },
+    "fold4_rint": {
+      "clipped_score": 0.7420324206606987,
+      "unclipped_ratio": 0.7803285339906423,
+      "smape": 65.96405637696702,
+      "wape": 51.42338369755528,
+      "rmse": 3.0900690230640535,
+      "bias": 79.37974490421988,
+      "rmsle": 0.5584307963700225
+    },
+    "5fold_average_rint": {
+      "clipped_score": 0.737456272,
+      "unclipped_ratio": 0.764913371,
+      "smape": 62.9490494,
+      "wape": 50.0176724,
+      "rmse": 2.9309792,
+      "bias": 76.4946820,
+      "rmsle": 0.5335123
+    }
+  },
+  "relative_paths": {
+    "dataset": "weekly_data/weekly_dataset.csv.gz",
+    "base_weights": "experiments/urgent_models/chronos2_small/model.safetensors",
+    "adapter_weights": "experiments/chronos_lora_fold4/checkpoint/lora_fold4_ckpt/adapter_model.safetensors",
+    "keyed_predictions": "experiments/chronos_lora_fold4/keyed_predictions/chronos2_small_lora_fold4_keyed.csv.gz",
+    "results_json": "experiments/chronos_lora_fold4/logs/fold4_lora_results.json",
+    "summary_csv": "experiments/chronos_lora_fold4/logs/fold4_lora_summary.csv",
+    "report_markdown": "experiments/chronos_lora_fold4/CHRONOS2_LORA_FOLD4_REPORT.md",
+    "independent_verification_script": "verify_chronos_lora_metrics.py",
+    "reload_audit_script": "test_chronos_lora_reload.py"
+  }
+}

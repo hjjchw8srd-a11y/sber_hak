@@ -173,8 +173,9 @@
   },
   "paths": {
     "code": "run_chronos_lora_fold4.py",
-    "checkpoint": "C:\\Users\\lenya\\OneDrive\\Рабочий стол\\hak\\experiments\\chronos_lora_fold4\\checkpoint\\lora_fold4_ckpt",
-    "keyed_predictions": "C:\\Users\\lenya\\OneDrive\\Рабочий стол\\hak\\experiments\\chronos_lora_fold4\\keyed_predictions\\chronos2_small_lora_fold4_keyed.csv.gz",
-    "log_json": "C:\\Users\\lenya\\OneDrive\\Рабочий стол\\hak\\experiments\\chronos_lora_fold4\\logs\\fold4_lora_results.json"
+    "checkpoint": "experiments/chronos_lora_fold4/checkpoint/lora_fold4_ckpt",
+    "keyed_predictions": "experiments/chronos_lora_fold4/keyed_predictions/chronos2_small_lora_fold4_keyed.csv.gz",
+    "log_json": "experiments/chronos_lora_fold4/logs/fold4_lora_results.json",
+    "manifest": "experiments/chronos_lora_fold4/manifest.json"
   }
 }
