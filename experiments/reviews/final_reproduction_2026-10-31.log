@@ -1,0 +1,15 @@
+W1031 23:30:24.240000 28948 site-packages\torch\utils\flop_counter.py:29] triton not found; flop counting will not work for triton kernels
+Seed set to 42
+Using 16bit Automatic Mixed Precision (AMP)
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+You are using a CUDA device ('NVIDIA GeForce RTX 3060 Laptop GPU') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+C:\Users\lenya\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytorch_lightning\utilities\_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+{
+  "rows": 79101,
+  "quantity_sum": 216701.0,
+  "max_abs_difference": 0.0,
+  "different_rows": 0,
+  "sha256": "09cd97d4dc930a5280bb93ae249f01ded35d755fff9b276a35e7473359022939"
+}

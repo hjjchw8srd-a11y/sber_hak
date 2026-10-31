@@ -1,0 +1,63 @@
+W1031 23:33:50.627000 15736 site-packages\torch\utils\flop_counter.py:29] triton not found; flop counting will not work for triton kernels
+Loading model bundle from C:\Users\lenya\OneDrive\������� ����\hak\forecast-container\model...
+Seed set to 42
+Model bundle loaded successfully! Bundle digest: 44136fa355b3678a...
+Running test_01_healthcheck... PASSED
+Running test_02_get_predict_before_post_returns_409... PASSED
+Running test_03_get_predict_all_before_post_returns_409... PASSED
+Running test_04_error_missing_both_query_params... PASSED
+Running test_05_error_invalid_format_predict_all... PASSED
+Running test_06_error_empty_files... PASSED
+Running test_07_error_missing_column... PASSED
+Running test_08_error_negative_quantity... PASSED
+Running test_09_error_history_under_180_days... PASSED
+Running test_10_dynamic_date_rules... 
+  [Dynamic Dates 1/3] Sunday 2026-07-26 cutoff -> calling predict_from_history...
+Seed set to 42
+Using 16bit Automatic Mixed Precision (AMP)
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+You are using a CUDA device ('NVIDIA GeForce RTX 3060 Laptop GPU') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+C:\Users\lenya\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytorch_lightning\utilities\_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+  [Dynamic Dates 2/3] Friday 2026-07-31 cutoff -> calling predict_from_history...
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+C:\Users\lenya\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytorch_lightning\utilities\_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+  [Dynamic Dates 3/3] Monday 2026-08-03 cutoff -> calling predict_from_history...
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+C:\Users\lenya\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytorch_lightning\utilities\_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+PASSED
+Running test_11_full_post_and_get_contract... 
+Reading 180-day slice for full POST test...
+Sending POST /predict...
+Using 16bit Automatic Mixed Precision (AMP)
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+C:\Users\lenya\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytorch_lightning\utilities\_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+POST returned 79101 rows, total qty: 215292
+POST and GET integration checks PASSED!
+PASSED
+Running test_12_cache_behavior... 
+Sending initial request with no_cache=true (expecting inference execution)...
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+C:\Users\lenya\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytorch_lightning\utilities\_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+Sending second identical request (expecting cache hit)...
+Cache test PASSED: initial inference 12.68s, cache hit 0.0044s, call count held at 2!
+PASSED
+Running test_13_reproducibility_with_bypass_and_perturbation... 
+[Run 1 with bypass] Sending POST /predict?no_cache=true...
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+C:\Users\lenya\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytorch_lightning\utilities\_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+[Run 2 with bypass] Sending POST /predict with X-Bypass-Cache: 1...
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+C:\Users\lenya\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytorch_lightning\utilities\_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+Exact reproducibility verified: both independent runs executed models and produced identical outputs!
+[Run 3 with perturbation] Sending perturbed sales (+50% sales on warehouse_name_1)...
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+C:\Users\lenya\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytorch_lightning\utilities\_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+Perturbation changed 147 units across 12 rows.
+Perturbation test PASSED: Real ML models actively respond to input data changes!
+PASSED
+
+All 13 unit, integration, reproducibility, and sensitivity tests PASSED successfully!

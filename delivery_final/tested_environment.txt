@@ -1,0 +1,12 @@
+torch==2.11.0+cu128
+pytorch-lightning==2.6.6
+neuralforecast==3.3.0
+lightgbm==4.7.0
+catboost==1.2.10
+pandas==3.0.5
+numpy==2.4.6
+pyarrow==26.0.0
+fastapi==0.141.1
+uvicorn==0.52.1
+python-multipart==0.0.32
+httpx==0.28.1
