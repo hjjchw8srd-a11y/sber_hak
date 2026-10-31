@@ -13,11 +13,21 @@
       "weight": 0.09
     }
   },
+  "lightgbm_b": {
+    "dual_regressor": true,
+    "gamma": 0.5
+  },
   "blend": {
     "alpha": 1.05,
     "threshold": 0.65,
     "rounding": "rint",
-    "clip_lower": 0
+    "clip_lower": 0,
+    "adaptive_thresholding": {
+      "enabled": false,
+      "threshold_active": 0.6,
+      "threshold_inactive": 0.68,
+      "min_active_rate": 0.4
+    }
   },
   "series_reconciliation": {
     "enabled": false,

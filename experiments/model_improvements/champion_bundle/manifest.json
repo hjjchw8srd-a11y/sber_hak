@@ -1,6 +1,6 @@
 {
   "model_name": "champion_all_stock_ensemble",
-  "created_at": "2026-10-31 12:18:05",
+  "created_at": "2026-10-31 13:47:49",
   "features_count": 28,
   "feature_columns": [
     "warehouse_name",
@@ -43,8 +43,10 @@
       "type": "NeuralForecast"
     },
     "lgbm_b": {
-      "type": "LightGBM",
-      "origins": 52
+      "type": "LightGBM_Dual_L1_L2",
+      "origins": 52,
+      "rows": 1000000,
+      "trees": 300
     },
     "catboost": {
       "type": "CatBoost",

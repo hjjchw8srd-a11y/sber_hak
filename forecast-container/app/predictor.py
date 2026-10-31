@@ -83,11 +83,13 @@ class Predictor:
         valid_pairs: pd.DataFrame,
         tft_model: NeuralForecast,
         lgbm_clf: lgb.Booster,
-        lgbm_reg: lgb.Booster,
-        cb_clf: Optional[CatBoostClassifier],
-        cb_reg: CatBoostRegressor,
-        cat_meta: dict[str, Any],
-        cat_boosters: dict[str, Tuple[lgb.Booster, lgb.Booster]],
+        lgbm_reg: Optional[lgb.Booster] = None,
+        cb_clf: Optional[CatBoostClassifier] = None,
+        cb_reg: Optional[CatBoostRegressor] = None,
+        cat_meta: Optional[dict[str, Any]] = None,
+        cat_boosters: Optional[dict[str, Tuple[lgb.Booster, lgb.Booster]]] = None,
+        lgbm_reg_l2: Optional[lgb.Booster] = None,
+        lgbm_reg_l1: Optional[lgb.Booster] = None,
     ) -> None:
         self.bundle_dir = bundle_dir
         self.manifest = manifest
@@ -96,10 +98,12 @@ class Predictor:
         self.tft_model = tft_model
         self.lgbm_clf = lgbm_clf
         self.lgbm_reg = lgbm_reg
+        self.lgbm_reg_l2 = lgbm_reg_l2
+        self.lgbm_reg_l1 = lgbm_reg_l1
         self.cb_clf = cb_clf
         self.cb_reg = cb_reg
-        self.cat_meta = cat_meta
-        self.cat_boosters = cat_boosters
+        self.cat_meta = cat_meta or {}
+        self.cat_boosters = cat_boosters or {}
 
         self.feature_cols = manifest["feature_columns"]
         self.cat_feature_cols = [c for c in self.feature_cols if c != "category_lvl_1"]
@@ -123,7 +127,19 @@ class Predictor:
 
         # Load LightGBM B models
         lgbm_clf = lgb.Booster(model_str=(bundle_path / "lgbm_b" / "clf.txt").read_text(encoding="utf-8"))
-        lgbm_reg = lgb.Booster(model_str=(bundle_path / "lgbm_b" / "reg.txt").read_text(encoding="utf-8"))
+        reg_l1_path = bundle_path / "lgbm_b" / "reg_l1.txt"
+        reg_l2_path = bundle_path / "lgbm_b" / "reg_l2.txt"
+        reg_path = bundle_path / "lgbm_b" / "reg.txt"
+
+        lgbm_reg_l2 = None
+        lgbm_reg_l1 = None
+        lgbm_reg = None
+
+        if reg_l1_path.exists() and reg_l2_path.exists():
+            lgbm_reg_l2 = lgb.Booster(model_str=reg_l2_path.read_text(encoding="utf-8"))
+            lgbm_reg_l1 = lgb.Booster(model_str=reg_l1_path.read_text(encoding="utf-8"))
+        elif reg_path.exists():
+            lgbm_reg = lgb.Booster(model_str=reg_path.read_text(encoding="utf-8"))
 
         # Load CatBoost models
         cb_reg = CatBoostRegressor()
@@ -157,6 +173,8 @@ class Predictor:
             cb_reg=cb_reg,
             cat_meta=cat_meta,
             cat_boosters=cat_boosters,
+            lgbm_reg_l2=lgbm_reg_l2,
+            lgbm_reg_l1=lgbm_reg_l1,
         )
 
     def prepare_dataset_from_raw(
@@ -576,7 +594,13 @@ class Predictor:
 
         # 2. LightGBM B prediction
         p_lgb = self.lgbm_clf.predict(test_df[self.feature_cols])
-        q_cond_lgb = np.maximum(np.expm1(self.lgbm_reg.predict(test_df[self.feature_cols])), 0.0)
+        if self.lgbm_reg_l1 is not None and self.lgbm_reg_l2 is not None:
+            q_cond_l2 = np.maximum(np.expm1(self.lgbm_reg_l2.predict(test_df[self.feature_cols])), 0.0)
+            q_cond_l1 = np.maximum(np.expm1(self.lgbm_reg_l1.predict(test_df[self.feature_cols])), 0.0)
+            gamma = float(self.postprocessing.get("lightgbm_b", {}).get("gamma", 0.5))
+            q_cond_lgb = gamma * q_cond_l2 + (1.0 - gamma) * q_cond_l1
+        else:
+            q_cond_lgb = np.maximum(np.expm1(self.lgbm_reg.predict(test_df[self.feature_cols])), 0.0)
         exp_lgb = p_lgb * q_cond_lgb
         gated_lgb = np.where(p_lgb < 0.5, 0.0, exp_lgb)
 
@@ -651,8 +675,28 @@ class Predictor:
         blend_cfg = self.postprocessing.get("blend", {})
         alpha = float(blend_cfg.get("alpha", 1.05))
         threshold = float(blend_cfg.get("threshold", 0.65))
+        adaptive_cfg = blend_cfg.get("adaptive_thresholding", {})
+
         scaled_blend = raw_blend * alpha
-        gated_blend = np.where(scaled_blend < threshold, 0.0, scaled_blend)
+        if adaptive_cfg.get("enabled", False):
+            th_active = float(adaptive_cfg.get("threshold_active", 0.60))
+            th_inactive = float(adaptive_cfg.get("threshold_inactive", 0.68))
+            min_act = float(adaptive_cfg.get("min_active_rate", 0.40))
+
+            hist_13 = extended_data[extended_data["week"] < future_mondays[0]].copy()
+            recent_mondays = sorted(hist_13["week"].unique())[-13:]
+            hist_13 = hist_13[hist_13["week"].isin(recent_mondays)]
+            hist_act = hist_13.groupby(["warehouse_name", "article"], observed=True)["quantity"].agg(
+                act_nz=lambda s: (s > 0).mean()
+            ).reset_index()
+
+            merged_act = merged.merge(hist_act, on=["warehouse_name", "article"], how="left")
+            act_mask = (merged_act["act_nz"].fillna(0.0) >= min_act).to_numpy()
+            thresh_arr = np.where(act_mask, th_active, th_inactive)
+            gated_blend = np.where(scaled_blend < thresh_arr, 0.0, scaled_blend)
+        else:
+            gated_blend = np.where(scaled_blend < threshold, 0.0, scaled_blend)
+
         final_quantity = np.rint(gated_blend).clip(0, None).astype(int)
 
         # Optional Activity-Conditioned Series Reconciler

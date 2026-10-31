@@ -1,18 +1,26 @@
 {
   "candidate_name": "champion_clipped_score",
-  "description": "All-Stock 29-feature Ensemble (45 TFT, 37 LGBM, 9 CB, 9 PerCat). Absolute best Clipped Score (0.729252) and lowest SMAPE (61.92%).",
-  "created_at": "2026-10-31 12:18:05",
+  "description": "All-Stock 29-feature Super-Ensemble (45 TFT, 37 Dual LGBM B 1M-Scale, 9 CB, 9 PerCat). Record 5-Fold Clipped Score (0.728728) and lowest SMAPE (61.90%).",
+  "created_at": "2026-10-31 13:47:49",
   "destination_file": "champion_clipped_score.csv",
-  "sha256": "a65c8290f5ce588c043b3075565e2d237721e255dc18ee983ce93bc377a93f25",
+  "sha256": "8dd3d7d71b0e17700eb092af3f41ee43864bddeeb79cbb944ea022d8d6e56ee1",
   "rows": 79101,
-  "total_volume": 215926.0,
-  "non_zero_rows": 34471,
-  "non_zero_rate": 0.4357846297771204,
+  "total_volume": 216701.0,
+  "non_zero_rows": 34241,
+  "non_zero_rate": 0.43287695477933275,
   "weights": {
     "tft": 0.45,
     "lightgbm_b": 0.37,
     "catboost": 0.09,
     "per_category": 0.09
+  },
+  "lightgbm_b_config": {
+    "scale_rows": 1000000,
+    "n_estimators": 300,
+    "learning_rate": 0.035,
+    "dual_regressor": true,
+    "gamma_l2": 0.5,
+    "gamma_l1": 0.5
   },
   "features_count": 28,
   "feature_columns": [
@@ -46,12 +54,12 @@
     "weeks_of_supply"
   ],
   "cv_performance_5_folds": {
-    "clipped_score_mean13": 0.729252,
-    "unclipped_ratio_mean13": 0.754471,
-    "score_naive_last": 0.77911,
-    "smape": 61.918,
-    "bias": 75.642,
-    "wape": 49.467,
-    "rmse": 2.8877
+    "clipped_score_mean13": 0.728728,
+    "unclipped_ratio_mean13": 0.753387,
+    "score_naive_last": 0.778307,
+    "smape": 61.898,
+    "bias": 75.412,
+    "wape": 49.33,
+    "rmse": 2.8784
   }
 }
