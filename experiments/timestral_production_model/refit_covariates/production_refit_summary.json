@@ -1,0 +1,35 @@
+{
+  "model": "mistralai/Timestral-209M",
+  "features": [
+    "D_category",
+    "C_network"
+  ],
+  "n_features": 6,
+  "training": {
+    "history_weeks": 134,
+    "steps": 300,
+    "microbatch": 4,
+    "grad_accum": 8,
+    "lr": 0.0001,
+    "weight_decay": 0.0001,
+    "train_duration_sec": 312.65843319892883,
+    "final_loss": 0.5205035209655762
+  },
+  "inference": {
+    "origin": 134,
+    "eval_duration_sec": 102.09796071052551
+  },
+  "zero_weight_test": {
+    "passed": true,
+    "differing_rows": 0,
+    "max_delta": 0
+  },
+  "candidate_submission": {
+    "path": "C:\\Users\\lenya\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\hak\\submissions\\submission_timestral_selected_features.csv",
+    "rows": 79101,
+    "sum": 215415,
+    "changed_rows_vs_champion": 2540,
+    "max_delta_vs_champion": 3,
+    "sha256": "42bd22673f76cd868359e04806a182dc8674bdf0375d62ce8b0d8a9a1a5b6b4b"
+  }
+}

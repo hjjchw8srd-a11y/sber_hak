@@ -1,0 +1,67 @@
+{
+  "selected_groups": [
+    "D_category",
+    "C_network"
+  ],
+  "rationale": "Combination of Category Macro Context (D) and Network-wide Article Demand (C) delivers the best standalone Clipped Score (0.739367 vs baseline 0.743019) and lowest WAPE (51.492%), while keeping inference latency fast (~100s for 79,101 rows) by maintaining only 6 past covariate channels.",
+  "features": [
+    {
+      "group": "D_category",
+      "name": "category_sales_mean_13_log",
+      "type": "past_covariate",
+      "description": "Category total volume on warehouse (13w rolling mean, signed log1p)"
+    },
+    {
+      "group": "D_category",
+      "name": "category_growth_4_vs_13",
+      "type": "past_covariate",
+      "description": "Short-term vs medium-term category trend on warehouse"
+    },
+    {
+      "group": "D_category",
+      "name": "article_share_category_13",
+      "type": "past_covariate",
+      "description": "Article volume share inside its category on warehouse"
+    },
+    {
+      "group": "C_network",
+      "name": "article_network_sales_mean_13_log",
+      "type": "past_covariate",
+      "description": "Network-wide article demand across all warehouses (13w mean, signed log1p)"
+    },
+    {
+      "group": "C_network",
+      "name": "article_network_growth_4_vs_13",
+      "type": "past_covariate",
+      "description": "Network-wide growth of article 4w vs 13w"
+    },
+    {
+      "group": "C_network",
+      "name": "warehouse_share_article_13",
+      "type": "past_covariate",
+      "description": "Warehouse share of total network sales for this article"
+    }
+  ],
+  "metrics_fold_4": {
+    "univariate_baseline_clipped": 0.743019,
+    "selected_features_clipped": 0.739367,
+    "delta_clipped": -0.003652,
+    "univariate_baseline_wape": 51.751,
+    "selected_features_wape": 51.492,
+    "univariate_baseline_rmse": 11.0827,
+    "selected_features_rmse": 3.0026,
+    "blend_w10_clipped": 0.734364
+  },
+  "metrics_full_5fold": {
+    "champion_clipped": 0.728728,
+    "univariate_blend_10_clipped": 0.728249,
+    "selected_covariates_blend_10_clipped": 0.728083,
+    "delta_vs_champion": -0.000645,
+    "delta_vs_univariate": -0.000166,
+    "champion_unclipped": 0.753387,
+    "univariate_blend_10_unclipped": 0.752665,
+    "selected_covariates_blend_10_unclipped": 0.752261,
+    "selection_folds_4_3_2_clipped": 0.730246,
+    "check_folds_1_0_clipped": 0.724838
+  }
+}
