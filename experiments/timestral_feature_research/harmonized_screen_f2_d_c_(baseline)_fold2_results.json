@@ -1,0 +1,57 @@
+{
+  "model": "Timestral LoRA (screen_f2_d_c_(baseline))",
+  "groups": [
+    "D_category",
+    "C_network"
+  ],
+  "fold": 2,
+  "best_step": 150,
+  "val_unclipped": 0.8114482019216799,
+  "val_records": [
+    {
+      "step": 75,
+      "val_clipped": 0.7586741435639944,
+      "val_unclipped": 0.8179694648512843,
+      "val_wape": 55.83166420883499,
+      "val_rmse": 3.297919360416736
+    },
+    {
+      "step": 150,
+      "val_clipped": 0.75627068866354,
+      "val_unclipped": 0.8114482019216799,
+      "val_wape": 55.34468337992209,
+      "val_rmse": 3.249767936883324
+    }
+  ],
+  "train_duration_sec": 295.0627341270447,
+  "test_eval_duration_sec": 129.48457956314087,
+  "raw_oof_path": "experiments\\timestral_feature_research\\oof_predictions\\harmonized_screen_f2_d_c_(baseline)_fold2_raw.csv.gz",
+  "raw_oof_sha256": "a35fa947845999cf7897fb1687bd0d11b041dc7f47d44a58fb5d1066a5e8861b",
+  "standalone_rint": {
+    "clipped": 0.7449685466618583,
+    "unclipped": 0.7660133199540707,
+    "smape": 64.55580755141308,
+    "wape": 49.81183131899992,
+    "rmse": 2.535366958068513,
+    "bias": 76.71079062603691,
+    "rmsle": 0.5272442533535932
+  },
+  "standalone_post": {
+    "clipped": 0.7460930780500172,
+    "unclipped": 0.7719701852204867,
+    "smape": 64.30781683746204,
+    "wape": 50.379179789205594,
+    "rmse": 2.5857220380724852,
+    "bias": 77.48845446684012,
+    "rmsle": 0.5334566275367598
+  },
+  "blend_w10": {
+    "clipped": 0.7218948861088289,
+    "unclipped": 0.7358690300033182,
+    "smape": 61.824580493428314,
+    "wape": 47.9688015189931,
+    "rmse": 2.3938983468821027,
+    "bias": 74.83016567273678,
+    "rmsle": 0.5179178601707425
+  }
+}

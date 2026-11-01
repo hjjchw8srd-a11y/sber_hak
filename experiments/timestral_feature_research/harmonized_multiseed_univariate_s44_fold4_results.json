@@ -1,0 +1,68 @@
+{
+  "model": "Timestral LoRA (multiseed_univariate_s44)",
+  "groups": [],
+  "fold": 4,
+  "best_step": 600,
+  "val_unclipped": 0.7441239142996133,
+  "val_records": [
+    {
+      "step": 150,
+      "val_clipped": 0.7183968577923852,
+      "val_unclipped": 0.748851762502289,
+      "val_wape": 52.18886165577342,
+      "val_rmse": 2.588890730940224
+    },
+    {
+      "step": 300,
+      "val_clipped": 0.7163290455586068,
+      "val_unclipped": 0.7463758052944865,
+      "val_wape": 51.993464052287585,
+      "val_rmse": 2.5852477439354664
+    },
+    {
+      "step": 450,
+      "val_clipped": 0.7150663115025274,
+      "val_unclipped": 0.7448850428908144,
+      "val_wape": 51.868191721132895,
+      "val_rmse": 2.5819301417934764
+    },
+    {
+      "step": 600,
+      "val_clipped": 0.7143568753717108,
+      "val_unclipped": 0.7441239142996133,
+      "val_wape": 51.80351307189542,
+      "val_rmse": 2.5775956711146786
+    }
+  ],
+  "train_duration_sec": 833.3292288780212,
+  "test_eval_duration_sec": 10.119916677474976,
+  "raw_oof_path": "experiments\\timestral_feature_research\\oof_predictions\\harmonized_multiseed_univariate_s44_fold4_raw.csv.gz",
+  "raw_oof_sha256": "63e0585c3e859bc999f58fe3d168195225e1f510370679998314d9999e5762d6",
+  "standalone_rint": {
+    "clipped": 0.7417238876645004,
+    "unclipped": 0.7793124041225172,
+    "smape": 65.86620545151965,
+    "wape": 51.54118842271361,
+    "rmse": 3.0825156335067905,
+    "bias": 79.17880751307204,
+    "rmsle": 0.5546858336507392
+  },
+  "standalone_post": {
+    "clipped": 0.7367925599362559,
+    "unclipped": 0.7751227167549334,
+    "smape": 65.69468767701883,
+    "wape": 51.2083090158442,
+    "rmse": 3.0165638398735855,
+    "bias": 79.36180983674718,
+    "rmsle": 0.5590777439957187
+  },
+  "blend_w10": {
+    "clipped": 0.7351710084983385,
+    "unclipped": 0.7718166670215382,
+    "smape": 64.6518671591661,
+    "wape": 51.25478243953051,
+    "rmse": 3.067818747021766,
+    "bias": 78.92456942507302,
+    "rmsle": 0.5494673386312642
+  }
+}

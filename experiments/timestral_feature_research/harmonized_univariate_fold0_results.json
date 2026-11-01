@@ -1,0 +1,68 @@
+{
+  "model": "Timestral LoRA (univariate)",
+  "groups": [],
+  "fold": 0,
+  "best_step": 600,
+  "val_unclipped": 0.7639829066162259,
+  "val_records": [
+    {
+      "step": 150,
+      "val_clipped": 0.7367613921765283,
+      "val_unclipped": 0.7645617018402188,
+      "val_wape": 49.777275591577755,
+      "val_rmse": 2.8137329895296443
+    },
+    {
+      "step": 300,
+      "val_clipped": 0.7367008232114667,
+      "val_unclipped": 0.7644763468987373,
+      "val_wape": 49.75065730861998,
+      "val_rmse": 2.8075325755170857
+    },
+    {
+      "step": 450,
+      "val_clipped": 0.7365050058959527,
+      "val_unclipped": 0.764084741090366,
+      "val_wape": 49.71860672301776,
+      "val_rmse": 2.801309411784236
+    },
+    {
+      "step": 600,
+      "val_clipped": 0.7363956022502522,
+      "val_unclipped": 0.7639829066162259,
+      "val_wape": 49.705569196671085,
+      "val_rmse": 2.8014402831995175
+    }
+  ],
+  "train_duration_sec": 818.390388250351,
+  "test_eval_duration_sec": 13.7267005443573,
+  "raw_oof_path": "experiments\\timestral_feature_research\\oof_predictions\\harmonized_univariate_fold0_raw.csv.gz",
+  "raw_oof_sha256": "c06efd8bb05671ed28b9eb7a3bdc6f70960e3997091ded3ed36aec2d07c44739",
+  "standalone_rint": {
+    "clipped": 0.738389420612441,
+    "unclipped": 0.7634275094999452,
+    "smape": 60.77345760035053,
+    "wape": 47.41871373671916,
+    "rmse": 3.3925542972239064,
+    "bias": 74.11270597650935,
+    "rmsle": 0.5162164416178271
+  },
+  "standalone_post": {
+    "clipped": 0.7327966875609914,
+    "unclipped": 0.7575785430590939,
+    "smape": 60.42990774029375,
+    "wape": 46.98967673875367,
+    "rmse": 3.2921374399127545,
+    "bias": 74.89543865148379,
+    "rmsle": 0.521078720872286
+  },
+  "blend_w10": {
+    "clipped": 0.7172039187046959,
+    "unclipped": 0.738224495341568,
+    "smape": 59.19433947353783,
+    "wape": 45.97665963378796,
+    "rmse": 3.147392904861333,
+    "bias": 73.42471923707949,
+    "rmsle": 0.5076539392811851
+  }
+}

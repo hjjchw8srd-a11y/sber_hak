@@ -58,6 +58,7 @@ experiments/timestral_smoke_test/test_lora_checkpoint/
 experiments/timestral_production_model/checkpoints/
 experiments/timestral_production_model/**/*.csv.gz
 experiments/timestral_production_model/*.csv.gz
+experiments/timestral_feature_research/checkpoints/
 experiments/champion_oof/*.csv.gz
 
 

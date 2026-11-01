@@ -65,5 +65,7 @@
     "rmse": 3.0620812594002422,
     "bias": 78.71988293347638,
     "rmsle": 0.5486966486803697
-  }
+  },
+  "raw_oof_path": "experiments\\timestral_feature_research\\oof_predictions\\harmonized_selected_dc_fold4_raw.csv.gz",
+  "raw_oof_sha256": "0e72b896e000e5fa6e8695184ce841c8e159e9ab08c66b420c72cf07e88de2d0"
 }

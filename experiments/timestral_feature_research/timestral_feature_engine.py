@@ -66,6 +66,16 @@ class TimestralFeatureEngine:
         self.n_series = self.matrices.n_pairs
         self.pairs = self.matrices.pairs.copy()
 
+        # Augment self.matrices with additional weekly stock features
+        ordered = data.sort_values(["week", "warehouse_name", "article"]).reset_index(drop=True)
+        def matrix(col: str) -> np.ndarray:
+            return ordered[col].to_numpy(dtype=np.float32).reshape(self.n_weeks, self.n_series)
+
+        self.matrices.stock_start = matrix("stock_week_start")
+        self.matrices.stock_change = matrix("stock_change")
+        self.matrices.stock_min = matrix("stock_min")
+        self.matrices.stock_max = matrix("stock_max")
+
         # Precompute calendar arrays across all 134+ weeks
         self._precompute_calendar()
         # Precompute category and network aggregations across time
@@ -219,12 +229,20 @@ class TimestralFeatureEngine:
         # ----------------------------------------------------------------------
         elif group == "B_stock":
             st_end = get_lagged_slice(self.matrices.stock_end, origin, context_len, lag=0)
+            st_start = get_lagged_slice(self.matrices.stock_start, origin, context_len, lag=0)
+            st_change = get_lagged_slice(self.matrices.stock_change, origin, context_len, lag=0)
+            st_min = get_lagged_slice(self.matrices.stock_min, origin, context_len, lag=0)
+            st_max = get_lagged_slice(self.matrices.stock_max, origin, context_len, lag=0)
             st_mean = get_lagged_slice(self.matrices.stock_mean, origin, context_len, lag=0)
             st_snr = get_lagged_slice(self.matrices.stock_nonpositive_rate, origin, context_len, lag=0)
             st_obs = get_lagged_slice(self.matrices.stock_observed_days, origin, context_len, lag=0)
 
             st_missing = np.isnan(st_end).astype(np.float32)
             st_end_clean = np.nan_to_num(st_end, nan=0.0)
+            st_start_clean = np.nan_to_num(st_start, nan=0.0)
+            st_change_clean = np.nan_to_num(st_change, nan=0.0)
+            st_min_clean = np.nan_to_num(st_min, nan=0.0)
+            st_max_clean = np.nan_to_num(st_max, nan=0.0)
             st_mean_clean = np.nan_to_num(st_mean, nan=0.0)
             st_snr_clean = np.nan_to_num(st_snr, nan=1.0)
             st_out = ((st_end_clean <= 0) & (st_obs > 0)).astype(np.float32)
@@ -239,6 +257,10 @@ class TimestralFeatureEngine:
 
             past_list.extend([
                 signed_log1p(st_end_clean),
+                signed_log1p(st_start_clean),
+                signed_log1p(st_change_clean),
+                signed_log1p(st_min_clean),
+                signed_log1p(st_max_clean),
                 signed_log1p(st_mean_clean),
                 st_snr_clean,
                 st_missing,
@@ -246,20 +268,22 @@ class TimestralFeatureEngine:
                 wos_seq,
             ])
             past_names.extend([
-                "stock_end", "stock_mean", "stock_nonpositive_rate",
-                "stock_missing", "stockout_flag", "weeks_of_supply"
+                "stock_end", "stock_start", "stock_change", "stock_min", "stock_max",
+                "stock_mean", "stock_nonpositive_rate", "stock_missing", "stockout_flag", "weeks_of_supply"
             ])
 
         # ----------------------------------------------------------------------
         # Group C: Network Demand Context (Past Covariates across context window)
         # ----------------------------------------------------------------------
-        elif group == "C_network":
+        elif group in ("C_network", "C_network_extended", "C_active"):
             # Network sales of article over past 13w and 4w
             net_sales_log = np.zeros((N, context_len), dtype=np.float32)
             net_growth = np.zeros((N, context_len), dtype=np.float32)
             wh_share = np.zeros((N, context_len), dtype=np.float32)
+            act_wh_seq = np.zeros((N, context_len), dtype=np.float32)
 
             art_codes = self.matrices.article_codes
+            n_art = self.matrices.n_articles
             Q = self.matrices.quantity
             NQ = self.network_quantity
 
@@ -277,18 +301,32 @@ class TimestralFeatureEngine:
                 net_growth[:, step_idx] = np.clip(np.divide(net_art4, net_art + 1e-4, out=np.ones_like(net_art), where=net_art > 0), 0.0, 5.0)
                 wh_share[:, step_idx] = np.clip(np.divide(own13, net_art + 1e-4, out=np.zeros_like(own13), where=net_art > 0), 0.0, 1.0)
 
-            past_list.extend([net_sales_log, net_growth, wh_share])
-            past_names.extend(["article_network_sales_mean_13_log", "article_network_growth_4_vs_13", "warehouse_share_article_13"])
+                if t > s13:
+                    w13_pos = (Q[s13:t, :] > 0).any(axis=0).astype(np.float32)
+                    wh_cnt = np.bincount(art_codes, weights=w13_pos, minlength=n_art).astype(np.float32)
+                    act_wh_seq[:, step_idx] = wh_cnt[art_codes]
+
+            if group == "C_active":
+                past_list.extend([act_wh_seq])
+                past_names.extend(["active_warehouses_article_13"])
+            elif group == "C_network_extended":
+                past_list.extend([net_sales_log, net_growth, wh_share, act_wh_seq])
+                past_names.extend(["article_network_sales_mean_13_log", "article_network_growth_4_vs_13", "warehouse_share_article_13", "active_warehouses_article_13"])
+            else:
+                past_list.extend([net_sales_log, net_growth, wh_share])
+                past_names.extend(["article_network_sales_mean_13_log", "article_network_growth_4_vs_13", "warehouse_share_article_13"])
 
         # ----------------------------------------------------------------------
         # Group D: Category Context (Past Covariates across context window)
         # ----------------------------------------------------------------------
-        elif group == "D_category":
+        elif group in ("D_category", "D_category_extended", "D_active"):
             cat_sales_log = np.zeros((N, context_len), dtype=np.float32)
             cat_growth = np.zeros((N, context_len), dtype=np.float32)
             art_cat_share = np.zeros((N, context_len), dtype=np.float32)
+            act_art_seq = np.zeros((N, context_len), dtype=np.float32)
 
             wcat_codes = self.matrices.warehouse_category_codes
+            n_wcat = self.matrices.n_warehouse_categories
             Q = self.matrices.quantity
             CQ = self.cat_quantity
 
@@ -306,8 +344,20 @@ class TimestralFeatureEngine:
                 cat_growth[:, step_idx] = np.clip(np.divide(cat_w4, cat_w + 1e-4, out=np.ones_like(cat_w), where=cat_w > 0), 0.0, 5.0)
                 art_cat_share[:, step_idx] = np.clip(np.divide(own13, cat_w + 1e-4, out=np.zeros_like(own13), where=cat_w > 0), 0.0, 1.0)
 
-            past_list.extend([cat_sales_log, cat_growth, art_cat_share])
-            past_names.extend(["category_sales_mean_13_log", "category_growth_4_vs_13", "article_share_category_13"])
+                if t > s13:
+                    w13_pos = (Q[s13:t, :] > 0).any(axis=0).astype(np.float32)
+                    art_cnt = np.bincount(wcat_codes, weights=w13_pos, minlength=n_wcat).astype(np.float32)
+                    act_art_seq[:, step_idx] = art_cnt[wcat_codes]
+
+            if group == "D_active":
+                past_list.extend([act_art_seq])
+                past_names.extend(["active_articles_category_13"])
+            elif group == "D_category_extended":
+                past_list.extend([cat_sales_log, cat_growth, art_cat_share, act_art_seq])
+                past_names.extend(["category_sales_mean_13_log", "category_growth_4_vs_13", "article_share_category_13", "active_articles_category_13"])
+            else:
+                past_list.extend([cat_sales_log, cat_growth, art_cat_share])
+                past_names.extend(["category_sales_mean_13_log", "category_growth_4_vs_13", "article_share_category_13"])
 
         # ----------------------------------------------------------------------
         # Group E: Money & Discounts (Past Covariates across context window)
@@ -349,9 +399,11 @@ class TimestralFeatureEngine:
         # Group G: Year Seasonality (Past Covariates across context window)
         # ----------------------------------------------------------------------
         elif group == "G_year":
+            lag51 = get_lagged_slice(self.matrices.quantity, origin, context_len, lag=51)
             lag52 = get_lagged_slice(self.matrices.quantity, origin, context_len, lag=52)
-            past_list.append(signed_log1p(lag52))
-            past_names.append("quantity_lag_52")
+            lag53 = get_lagged_slice(self.matrices.quantity, origin, context_len, lag=53)
+            past_list.extend([signed_log1p(lag51), signed_log1p(lag52), signed_log1p(lag53)])
+            past_names.extend(["quantity_lag_51", "quantity_lag_52", "quantity_lag_53"])
 
         # ----------------------------------------------------------------------
         # Group H: Categorical Encodings (Past Covariates: smoothed target encoding)
@@ -368,6 +420,12 @@ class TimestralFeatureEngine:
             cat1_counts = np.bincount(cat1_codes, minlength=int(cat1_codes.max()+1))
             cat1_te = (cat1_means / np.maximum(cat1_counts, 1))[cat1_codes]
 
+            # Mean by category_lvl_2
+            cat2_codes = pd.factorize(self.matrices.static["category_lvl_2"], sort=True)[0]
+            cat2_means = np.bincount(cat2_codes, weights=mean_series, minlength=int(cat2_codes.max()+1))
+            cat2_counts = np.bincount(cat2_codes, minlength=int(cat2_codes.max()+1))
+            cat2_te = (cat2_means / np.maximum(cat2_counts, 1))[cat2_codes]
+
             # Mean by warehouse
             wh_codes = self.matrices.warehouse_codes
             wh_means = np.bincount(wh_codes, weights=mean_series, minlength=int(wh_codes.max()+1))
@@ -375,10 +433,11 @@ class TimestralFeatureEngine:
             wh_te = (wh_means / np.maximum(wh_counts, 1))[wh_codes]
 
             te_cat1 = np.tile(signed_log1p(cat1_te)[:, None], (1, context_len))
+            te_cat2 = np.tile(signed_log1p(cat2_te)[:, None], (1, context_len))
             te_wh = np.tile(signed_log1p(wh_te)[:, None], (1, context_len))
 
-            past_list.extend([te_cat1, te_wh])
-            past_names.extend(["target_enc_category_lvl_1", "target_enc_warehouse"])
+            past_list.extend([te_cat1, te_cat2, te_wh])
+            past_names.extend(["target_enc_category_lvl_1", "target_enc_category_lvl_2", "target_enc_warehouse"])
 
         # Stack into numpy arrays
         if len(past_list) > 0:

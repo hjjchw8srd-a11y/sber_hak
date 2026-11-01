@@ -23,6 +23,7 @@ import time
 import math
 import argparse
 import json
+import hashlib
 from pathlib import Path
 from typing import Dict, List, Any, Tuple
 
@@ -101,7 +102,7 @@ def run_harmonized_evaluation(
     truth_df: pd.DataFrame,
     base_df: pd.DataFrame,
     device: torch.device,
-    eval_batch_size: int = 64,
+    eval_batch_size: int = 128,
 ) -> Tuple[Dict[str, Any], np.ndarray]:
     """Runs batch inference and computes exact competition metrics."""
     forecaster.model.eval()
@@ -245,6 +246,7 @@ def train_harmonized_model(
 
     ps = forecaster.patch_size
     horizon_patches = math.ceil(HORIZON / ps)
+    torch.set_float32_matmul_precision("high")
 
     train_start_time = time.time()
     step = 0
@@ -403,6 +405,16 @@ def train_harmonized_model(
     print(f"  Champion + 10% Blend: Clipped = {c_blend:.6f} | Unclipped = {u_blend:.6f} | WAPE = {m_blend['wape']:.3f}% | RMSE = {m_blend['rmse']:.4f}")
     print(f"{'='*100}\n", flush=True)
 
+    # Export raw OOF predictions
+    oof_dir = ROOT / "experiments" / "timestral_feature_research" / "oof_predictions"
+    oof_dir.mkdir(parents=True, exist_ok=True)
+    out_oof = oof_dir / f"harmonized_{save_tag}_fold{fold}_raw.csv.gz"
+    df_raw = test_truth_df[KEYS].copy()
+    df_raw["prediction_raw"] = pred_continuous
+    df_raw.to_csv(out_oof, index=False, compression="gzip")
+    raw_sha = hashlib.sha256(out_oof.read_bytes()).hexdigest()
+    print(f"  Raw OOF saved to {out_oof.name} | SHA256: {raw_sha}", flush=True)
+
     out_json = ROOT / "experiments" / "timestral_feature_research" / f"harmonized_{save_tag}_fold{fold}_results.json"
     summary_save = {
         "model": f"Timestral LoRA ({save_tag})",
@@ -413,6 +425,8 @@ def train_harmonized_model(
         "val_records": val_records,
         "train_duration_sec": train_duration,
         "test_eval_duration_sec": test_duration,
+        "raw_oof_path": str(out_oof.relative_to(ROOT)),
+        "raw_oof_sha256": raw_sha,
         "standalone_rint": test_results["rint"],
         "standalone_post": test_results["post"],
         "blend_w10": {"clipped": c_blend, "unclipped": u_blend, **m_blend},

@@ -1,0 +1,68 @@
+{
+  "model": "Timestral LoRA (univariate)",
+  "groups": [],
+  "fold": 2,
+  "best_step": 600,
+  "val_unclipped": 0.7813046396427602,
+  "val_records": [
+    {
+      "step": 150,
+      "val_clipped": 0.7454940769287199,
+      "val_unclipped": 0.7861474078287058,
+      "val_wape": 53.72471551515419,
+      "val_rmse": 3.143015698266385
+    },
+    {
+      "step": 300,
+      "val_clipped": 0.7447656561946957,
+      "val_unclipped": 0.7842640336790576,
+      "val_wape": 53.61191204630995,
+      "val_rmse": 3.1198728182318303
+    },
+    {
+      "step": 450,
+      "val_clipped": 0.7441166381664505,
+      "val_unclipped": 0.7823697391621567,
+      "val_wape": 53.45398718992802,
+      "val_rmse": 3.099629667321181
+    },
+    {
+      "step": 600,
+      "val_clipped": 0.7436162217342038,
+      "val_unclipped": 0.7813046396427602,
+      "val_wape": 53.36154337155812,
+      "val_rmse": 3.0887575177572377
+    }
+  ],
+  "train_duration_sec": 372.09426045417786,
+  "test_eval_duration_sec": 14.092260360717773,
+  "raw_oof_path": "experiments\\timestral_feature_research\\oof_predictions\\harmonized_univariate_fold2_raw.csv.gz",
+  "raw_oof_sha256": "39c2fd43cec4b593d447645b2973b982f7c0de671257451037f33b6b5a3f19ae",
+  "standalone_rint": {
+    "clipped": 0.7366131539133589,
+    "unclipped": 0.7522299273034058,
+    "smape": 63.229309355996755,
+    "wape": 49.147840323809305,
+    "rmse": 2.47129639045655,
+    "bias": 75.6135539698605,
+    "rmsle": 0.5226014142118068
+  },
+  "standalone_post": {
+    "clipped": 0.7391796904020214,
+    "unclipped": 0.7604709296290101,
+    "smape": 63.05579877802405,
+    "wape": 49.872659261196326,
+    "rmse": 2.5338032751538377,
+    "bias": 76.77999191934379,
+    "rmsle": 0.5296132313433488
+  },
+  "blend_w10": {
+    "clipped": 0.7223669577281483,
+    "unclipped": 0.7366120562104941,
+    "smape": 61.85288942290557,
+    "wape": 48.03304037383603,
+    "rmse": 2.39585941775686,
+    "bias": 74.97263458056979,
+    "rmsle": 0.5184924054654659
+  }
+}

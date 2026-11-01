@@ -1,0 +1,68 @@
+{
+  "model": "Timestral LoRA (univariate)",
+  "groups": [],
+  "fold": 1,
+  "best_step": 600,
+  "val_unclipped": 0.7620913543567172,
+  "val_records": [
+    {
+      "step": 150,
+      "val_clipped": 0.7415076193361824,
+      "val_unclipped": 0.7655752875394689,
+      "val_wape": 50.23251054540493,
+      "val_rmse": 2.563927105683608
+    },
+    {
+      "step": 300,
+      "val_clipped": 0.7400426215307375,
+      "val_unclipped": 0.7629496534854816,
+      "val_wape": 50.046047320728114,
+      "val_rmse": 2.5481197229429866
+    },
+    {
+      "step": 450,
+      "val_clipped": 0.740050221709327,
+      "val_unclipped": 0.7627842520254713,
+      "val_wape": 50.04320489352268,
+      "val_rmse": 2.544403456772335
+    },
+    {
+      "step": 600,
+      "val_clipped": 0.7396983671464679,
+      "val_unclipped": 0.7620913543567172,
+      "val_wape": 49.984650893090624,
+      "val_rmse": 2.5400248569657977
+    }
+  ],
+  "train_duration_sec": 376.32412934303284,
+  "test_eval_duration_sec": 14.267846822738647,
+  "raw_oof_path": "experiments\\timestral_feature_research\\oof_predictions\\harmonized_univariate_fold1_raw.csv.gz",
+  "raw_oof_sha256": "d4cb4d6c441e6b9d446009a0f3b09b3288e93b80515034e8712d8304ca5e2d3f",
+  "standalone_rint": {
+    "clipped": 0.7308622605738879,
+    "unclipped": 0.7555428762246919,
+    "smape": 61.78031105042875,
+    "wape": 48.952108819886575,
+    "rmse": 2.722123599427043,
+    "bias": 74.66273919125712,
+    "rmsle": 0.5190976291449194
+  },
+  "standalone_post": {
+    "clipped": 0.7355440620363659,
+    "unclipped": 0.7623211368895328,
+    "smape": 61.43246383765426,
+    "wape": 49.61376328197996,
+    "rmse": 2.788755693240732,
+    "bias": 75.55243692019616,
+    "rmsle": 0.5254299562652321
+  },
+  "blend_w10": {
+    "clipped": 0.7322980223099643,
+    "unclipped": 0.7555377050990887,
+    "smape": 61.068182918035184,
+    "wape": 49.228069794224375,
+    "rmse": 2.782869885466016,
+    "bias": 73.66391444765421,
+    "rmsle": 0.5209552083871073
+  }
+}
